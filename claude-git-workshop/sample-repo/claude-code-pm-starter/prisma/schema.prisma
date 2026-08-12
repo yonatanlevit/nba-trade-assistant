@@ -1,0 +1,75 @@
+// Prisma schema for InvoiceFlow
+// SQLite for simplicity — workshop participants don't need to install Postgres
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  name         String?
+  // currencyCode is the user's default — but display-side this is duplicated in 4 places. See lib/currency.ts.
+  currencyCode String     @default("USD")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  customers    Customer[]
+  invoices     Invoice[]
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  email     String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  invoices  Invoice[]
+}
+
+model Invoice {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customerId   String
+  customer     Customer   @relation(fields: [customerId], references: [id])
+  number       String
+  status       String     @default("draft") // draft | sent | paid | overdue
+  issueDate    DateTime   @default(now())
+  dueDate      DateTime
+  // amountCents stored as integer (cents) — but display formatting is duplicated. See lib/currency.ts.
+  currencyCode String     @default("USD")
+  notes        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  lineItems    LineItem[]
+  payments     Payment[]
+
+  @@unique([userId, number])
+}
+
+model LineItem {
+  id           String  @id @default(cuid())
+  invoiceId    String
+  invoice      Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description  String
+  quantity     Float   @default(1)
+  unitPriceCents Int
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amountCents Int
+  paidAt      DateTime @default(now())
+  method      String?  // "bank_transfer" | "card" | "cash" | etc.
+}

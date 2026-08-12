@@ -1,0 +1,17 @@
+{
+  "$comment": "Stub MCP server config for the workshop. Uncomment and fill in to connect.",
+  "mcpServers": {
+    "_atlassian": {
+      "_doc": "Uncomment and configure to use Jira/Confluence in Part 3.",
+      "_url": "https://mcp.atlassian.com/v1/sse"
+    },
+    "_notion": {
+      "_doc": "Uncomment and configure to use Notion in Part 3.",
+      "_url": "https://mcp.notion.com/mcp"
+    },
+    "_figma": {
+      "_doc": "Uncomment and configure to use Figma Dev Mode MCP in Part 2.",
+      "_url": "https://mcp.figma.com/mcp"
+    }
+  }
+}

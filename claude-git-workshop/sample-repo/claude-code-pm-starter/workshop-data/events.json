@@ -1,0 +1,38 @@
+{
+  "$comment": "Mock product analytics events for the workshop. Funnel: signup → first_invoice_created → first_invoice_sent → first_payment_received → retained_30_day",
+  "generated_at": "2026-04-15",
+  "total_users_in_window": 1240,
+  "funnel_steps": [
+    { "step": "signup", "users": 1240, "conversion_from_previous": 1.0 },
+    { "step": "completed_onboarding", "users": 1102, "conversion_from_previous": 0.889 },
+    { "step": "first_customer_added", "users": 894, "conversion_from_previous": 0.811 },
+    { "step": "first_invoice_created", "users": 712, "conversion_from_previous": 0.796 },
+    { "step": "first_invoice_sent", "users": 489, "conversion_from_previous": 0.687 },
+    { "step": "first_payment_received", "users": 312, "conversion_from_previous": 0.638 },
+    { "step": "retained_30_day", "users": 264, "conversion_from_previous": 0.846 }
+  ],
+  "drop_off_notes": [
+    {
+      "between": "first_invoice_created → first_invoice_sent",
+      "drop_pct": 0.313,
+      "hypothesis": "Users build a draft but get stuck on the customer email step or the PDF preview takes too long. Highest leverage drop to investigate."
+    },
+    {
+      "between": "completed_onboarding → first_customer_added",
+      "drop_pct": 0.189,
+      "hypothesis": "The 'Add customer' button isn't discoverable on the empty dashboard."
+    }
+  ],
+  "by_plan": {
+    "free": { "signup": 982, "first_invoice_sent": 367, "retained_30_day": 178 },
+    "pro": { "signup": 215, "first_invoice_sent": 102, "retained_30_day": 71 },
+    "team": { "signup": 43, "first_invoice_sent": 20, "retained_30_day": 15 }
+  },
+  "by_source": {
+    "organic_search": 521,
+    "twitter": 198,
+    "linkedin": 156,
+    "referral": 211,
+    "paid_search": 154
+  }
+}

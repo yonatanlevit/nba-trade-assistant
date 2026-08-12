@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ user.username }} — StreakKeeper</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <main class="max-w-2xl mx-auto px-6 py-12">
+    <h1 class="text-3xl font-bold mb-2">{{ user.username }}</h1>
+    <p class="text-gray-500 mb-8">Public habits</p>
+
+    <ul class="space-y-3">
+      {% for habit in habits %}
+        <li class="bg-white border rounded p-4">
+          <div class="font-medium">{{ habit.name }}</div>
+        </li>
+      {% endfor %}
+    </ul>
+  </main>
+</body>
+</html>

@@ -1,0 +1,2587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workshop · How to ship software well</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4efe6;
+    --paper-2:#ebe4d6;
+    --ink:#171513;
+    --ink-2:#3b332c;
+    --muted:#7a6f63;
+    --rule:#cfc6b4;
+    --accent:#b6452b;     /* terracotta */
+    --accent-2:#1f4d3f;   /* forest */
+    --warn:#a8741a;
+    --ok:#3a6e3a;
+    --grid: rgba(23,21,19,0.06);
+  }
+  html,body{background:var(--paper); color:var(--ink); font-family:'Inter',ui-sans-serif,system-ui,sans-serif;}
+  .font-display{font-family:'Fraunces',ui-serif,Georgia,serif; font-optical-sizing:auto; letter-spacing:-0.01em;}
+  .font-mono{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;}
+  .deck-bg{
+    background-image:
+      radial-gradient(1200px 600px at 10% -10%, rgba(182,69,43,0.06), transparent 60%),
+      radial-gradient(900px 500px at 110% 110%, rgba(31,77,63,0.05), transparent 60%);
+  }
+  .paper-grid{
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-position: -1px -1px;
+  }
+  .rule{border-color:var(--rule);}
+  .ink{color:var(--ink);} .ink-2{color:var(--ink-2);} .muted{color:var(--muted);}
+  .accent{color:var(--accent);} .bg-accent{background:var(--accent);}
+  .chip{display:inline-flex; align-items:center; gap:.5rem; padding:.25rem .6rem; border:1px solid var(--rule); border-radius:999px; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2); background:rgba(255,255,255,0.4);}
+  .kbd{font-family:'JetBrains Mono',monospace; font-size:11px; padding:2px 6px; border:1px solid var(--rule); border-bottom-width:2px; border-radius:6px; background:rgba(255,255,255,0.6); color:var(--ink-2);}
+  .btn{display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .9rem; border:1px solid var(--ink); background:var(--ink); color:var(--paper); border-radius:8px; font-weight:500; font-size:13px; cursor:pointer; transition:transform .08s ease, background .15s ease;}
+  .btn:hover{background:#000;}
+  .btn:active{transform:translateY(1px);}
+  .btn-ghost{background:transparent; color:var(--ink); border:1px solid var(--rule);}
+  .btn-ghost:hover{background:rgba(0,0,0,0.04);}
+  .btn-accent{background:var(--accent); border-color:var(--accent); color:#fff8ef;}
+  .btn-accent:hover{background:#9a3a23;}
+  .card{background:rgba(255,255,255,0.55); border:1px solid var(--rule); border-radius:14px; backdrop-filter: blur(2px);}
+  .num-tag{font-family:'Fraunces',serif; font-weight:500; font-size:11px; letter-spacing:.18em; color:var(--muted); text-transform:uppercase;}
+  .h-display{font-family:'Fraunces',serif; font-weight:500; letter-spacing:-0.02em; line-height:1.02;}
+  .underline-wave{background-image: linear-gradient(transparent 70%, rgba(182,69,43,0.35) 70%); background-repeat: no-repeat;}
+  .slide{display:none;}
+  .slide.active{display:flex;}
+  .slide{min-height:100vh; width:100%; flex-direction:column;}
+  /* Bit & gate visuals */
+  .bit{width:46px; height:46px; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:20px; border:1px solid var(--ink); border-radius:8px; cursor:pointer; user-select:none; transition: all .15s ease; background:rgba(255,255,255,0.6); color:var(--ink);}
+  .bit.on{background:var(--ink); color:var(--paper);}
+  .bit:hover{transform:translateY(-1px);}
+  .bit.flash{animation: flash .35s ease;}
+  @keyframes flash { 0%{box-shadow:0 0 0 0 rgba(182,69,43,0.5);} 100%{box-shadow:0 0 0 14px rgba(182,69,43,0);} }
+  .pulse-ok{animation: pulseok .5s ease;}
+  @keyframes pulseok { 0%{box-shadow:0 0 0 0 rgba(58,110,58,0.45);} 100%{box-shadow:0 0 0 12px rgba(58,110,58,0);} }
+  .nav-dot{width:7px; height:7px; border-radius:999px; background:var(--rule);}
+  .nav-dot.active{background:var(--ink);}
+  /* Truth table */
+  table.tt{border-collapse:collapse; width:100%; font-family:'JetBrains Mono',monospace; font-size:14px;}
+  table.tt th, table.tt td{border:1px solid var(--rule); padding:.55rem .7rem; text-align:center;}
+  table.tt th{background:rgba(0,0,0,0.03); font-weight:600; color:var(--ink-2);}
+  table.tt td.input{cursor:pointer; user-select:none;}
+  table.tt tr.active td{background:rgba(182,69,43,0.08);}
+  /* Code blocks */
+  pre.code{font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.55; background:#1b1815; color:#f3ead8; padding:14px 16px; border-radius:10px; overflow:auto;}
+  pre.code .c{color:#8a8074;}
+  pre.code .k{color:#e0a458;}
+  pre.code .s{color:#a3c9a8;}
+  pre.code .n{color:#e8b4a0;}
+  /* Commit graph */
+  .commit{stroke:var(--ink); stroke-width:1.5; transition: all .2s ease;}
+  .commit-fill-main{fill:#fff8ef;}
+  .commit-fill-feat{fill:var(--accent);}
+  .commit-fill-fix{fill:var(--accent-2);}
+  .commit-label{font-family:'JetBrains Mono',monospace; font-size:11px; fill:var(--ink-2);}
+  .branch-line{stroke:var(--ink-2); stroke-width:1.5; fill:none;}
+  .branch-line.feat{stroke:var(--accent);}
+  .branch-line.fix{stroke:var(--accent-2);}
+  /* Editor panes (conflict sim) */
+  .editor{font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6; background:#1b1815; color:#f3ead8; border-radius:10px; padding:12px; min-height:240px; width:100%; resize:none; border:none; outline:none;}
+  .editor:focus{box-shadow: 0 0 0 2px var(--accent);}
+  .editor.merged{background:#161f18;}
+  .conflict-line{color:#e0a458;}
+  /* Stage marker */
+  .stage{position:fixed; top:14px; left:18px; display:flex; gap:8px; align-items:center; z-index:50;}
+  .progress{position:fixed; bottom:0; left:0; height:3px; background:var(--accent); transition: width .25s ease; z-index:50;}
+  .footer-nav{position:fixed; bottom:14px; right:18px; display:flex; gap:8px; align-items:center; z-index:50;}
+  .slide-no{position:fixed; bottom:14px; left:18px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); z-index:50;}
+  /* Subtle paper texture */
+  .paper-tex::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:1;
+    background-image: radial-gradient(rgba(0,0,0,0.025) 1px, transparent 1px);
+    background-size: 3px 3px;
+    mix-blend-mode: multiply;
+    opacity:.6;
+  }
+  /* Misc */
+  .divider{height:1px; background:var(--rule);}
+  .tick{color:var(--ok); font-weight:700;}
+  .cross{color:var(--accent); font-weight:700;}
+  details > summary { list-style:none; cursor:pointer; }
+  details > summary::-webkit-details-marker{ display:none; }
+  /* Binary counting ladder */
+  table.ladder-table{margin:0 auto; border-collapse:collapse; font-family:'JetBrains Mono',monospace;}
+  table.ladder-table th{font-size:11px; font-weight:500; color:var(--muted); padding:6px 8px; text-align:center; border-bottom:1.5px solid var(--ink-2);}
+  table.ladder-table th:first-child{width:5ch;}
+  table.ladder-table td{font-size:18px; padding:8px 10px; text-align:center; border-bottom:1px solid var(--rule);}
+  table.ladder-table tbody tr:last-child td{border-bottom:none;}
+  table.ladder-table td.dec{color:var(--muted); font-size:14px; text-align:right; padding-right:18px; min-width:5ch;}
+  table.ladder-table td.off{color:var(--rule);}
+  table.ladder-table td.on{color:var(--accent); font-weight:700;}
+  table.ladder-table tr.ellipsis td{padding:4px 8px; color:var(--muted); font-size:14px;}
+
+  /* Abstraction-ladder layer rows */
+  .layer-row{display:grid; grid-template-columns:48px 140px 1fr; gap:18px; align-items:center; padding:14px 18px; border:1px solid var(--rule); border-radius:10px;}
+  .layer-num{font-family:'Fraunces',serif; font-size:28px; font-weight:500; color:var(--muted); text-align:center;}
+  .layer-name{font-family:'Fraunces',serif; font-size:24px; letter-spacing:-0.01em;}
+  .layer-code{font-size:12px !important; padding:8px 12px !important; margin:0;}
+
+  /* Make sure interactives sit above paper texture */
+  .above{position:relative; z-index:2;}
+
+  /* ===== PR comparison cards (good/bad) ===== */
+  .pr-card{
+    background:rgba(255,255,255,0.7);
+    border:1px solid var(--rule);
+    border-radius:10px;
+    padding:18px 20px 16px;
+    position:relative;
+  }
+  .pr-card.pr-bad{border-left:4px solid var(--accent);}
+  .pr-card.pr-good{border-left:4px solid var(--accent-2);}
+
+  .pr-status{display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+  .pr-state{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:3px 10px; border-radius:999px;
+    font-size:12px; font-weight:600;
+    font-family:'Inter',sans-serif;
+  }
+  .pr-state-open{background:rgba(168,116,26,0.18); color:var(--warn);}
+  .pr-state-good{background:rgba(31,77,63,0.18); color:var(--accent-2);}
+  .pr-meta{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted);}
+
+  .pr-title{
+    font-family:'Inter',sans-serif;
+    font-size:18px; font-weight:600;
+    color:var(--ink);
+    line-height:1.3;
+    margin-bottom:12px;
+  }
+  .pr-flag{font-family:'JetBrains Mono',monospace; font-size:0.88em; padding:1px 6px; background:rgba(0,0,0,0.06); border-radius:4px;}
+
+  .pr-labels{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;}
+  .pr-label{
+    font-family:'Inter',sans-serif;
+    font-size:11px; font-weight:600;
+    padding:2px 9px; border-radius:999px;
+    letter-spacing:0.02em;
+  }
+
+  .pr-diff-row{
+    display:flex; align-items:center; gap:10px;
+    font-family:'JetBrains Mono',monospace; font-size:12px;
+    padding-top:10px; border-top:1px solid var(--rule);
+  }
+  .pr-diff-add{color:var(--ok); font-weight:700;}
+  .pr-diff-rem{color:var(--accent); font-weight:700;}
+  .pr-diff-bar{
+    flex:1; height:8px;
+    background:rgba(0,0,0,0.05);
+    border-radius:2px;
+    display:flex;
+    overflow:hidden;
+    min-width:60px;
+  }
+  .pr-diff-bar-add, .pr-diff-bar-rem{height:100%;}
+  .pr-files{font-size:11px; color:var(--muted); white-space:nowrap;}
+
+  .pr-bullets{
+    list-style:none; padding:0;
+    font-size:13px; color:var(--ink-2);
+  }
+  .pr-bullets li{
+    display:flex; align-items:flex-start; gap:8px;
+    padding:5px 0;
+    line-height:1.4;
+  }
+  .pr-bullets li .tick, .pr-bullets li .cross{flex-shrink:0; padding-top:1px;}
+  /* Mark thread callout */
+  .thread{display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .75rem; border-radius:999px; background:rgba(182,69,43,0.1); color:var(--accent); border:1px solid rgba(182,69,43,0.25); font-size:12px; letter-spacing:.04em;}
+
+  /* ===== Circuit builder ===== */
+  .gate-chip{cursor:grab; user-select:none; padding:6px 10px; border-radius:8px; border:1px dashed var(--rule); background:rgba(255,255,255,0.6);}
+  .gate-chip:active{cursor:grabbing;}
+  .gate-pill{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; padding:4px 10px; border-radius:6px;}
+  .gate-pill.and{background:rgba(31,77,63,0.15); color:var(--accent-2);}
+  .gate-pill.or {background:rgba(168,116,26,0.15); color:var(--warn);}
+  .gate-pill.not{background:rgba(122,111,99,0.15); color:var(--ink-2);}
+  .gate-pill.xor{background:rgba(182,69,43,0.18); color:var(--accent);}
+  .gate-node{position:absolute; width:88px; padding:6px 6px 18px 6px; border-radius:10px; background:rgba(255,255,255,0.95); border:1.5px solid var(--ink); z-index:3; user-select:none;}
+  .gate-node .body{display:flex; align-items:center; justify-content:center; height:34px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px;}
+  .gate-node .body.and{background:rgba(31,77,63,0.12); color:var(--accent-2); border-radius:6px;}
+  .gate-node .body.or {background:rgba(168,116,26,0.12); color:var(--warn); border-radius:6px;}
+  .gate-node .body.not{background:rgba(122,111,99,0.14); color:var(--ink-2); border-radius:6px;}
+  .gate-node .body.xor{background:rgba(182,69,43,0.18); color:var(--accent); border-radius:6px;}
+  .gate-node.dragging{opacity:.6;}
+  .gate-node .del{position:absolute; top:-7px; right:-7px; width:18px; height:18px; border-radius:50%; background:var(--accent); color:#fff; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; border:none;}
+  .port{position:absolute; width:14px; height:14px; border-radius:50%; background:#fff; border:2px solid var(--ink); cursor:crosshair; z-index:4;}
+  .port:hover{background:var(--accent); border-color:var(--accent);}
+  .port.active{background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 3px rgba(182,69,43,0.2);}
+  .port.out{right:-7px; top:50%; transform:translateY(-50%);}
+  .port.in-a{left:-7px; top:30%; transform:translateY(-50%);}
+  .port.in-b{left:-7px; top:70%; transform:translateY(-50%);}
+  .port.in-only{left:-7px; top:50%; transform:translateY(-50%);}
+  .io-node{position:absolute; width:64px; padding:4px; border-radius:10px; background:rgba(255,255,255,0.95); border:1.5px solid var(--ink); z-index:3;}
+  .io-node .body{display:flex; align-items:center; justify-content:center; height:34px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:18px; cursor:pointer; border-radius:6px; background:rgba(0,0,0,0.04);}
+  .io-node .body.on{background:var(--ink); color:var(--paper);}
+  .io-node .lbl{font-size:10px; text-align:center; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-top:2px;}
+  .io-node.out .body.on{background:var(--accent-2); color:#fff;}
+  .io-node.out .body{cursor:default;}
+  .io-node.out .body.wrong{background:rgba(182,69,43,0.85); color:#fff;}
+  .canvas-success{animation: pulseok 0.6s ease;}
+  .test-case-row{display:flex; align-items:center; gap:8px; font-family:'JetBrains Mono',monospace; font-size:12px; padding:3px 8px; border-radius:6px;}
+  .test-case-row.pass{background:rgba(58,110,58,0.12); color:var(--ok);}
+  .test-case-row.fail{background:rgba(182,69,43,0.12); color:var(--accent);}
+
+  /* Live truth table panel next to circuit canvas */
+  .truth-panel{min-width:300px; padding:14px; border:1px solid var(--rule); border-radius:10px; background:rgba(255,255,255,0.5);}
+  .num-tag.target-label{color:var(--ink-2);}
+  .num-tag.yours-label{color:var(--accent);}
+
+  /* Side-by-side target / yours tables */
+  table.tt-split{border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:12px; width:100%;}
+  table.tt-split th, table.tt-split td{border:1px solid var(--rule); padding:5px 7px; text-align:center; min-width:24px;}
+  /* Bold divider between input columns (A, B) and output columns */
+  table.tt-split th:nth-child(2), table.tt-split td:nth-child(2){border-right:2.5px solid var(--ink);}
+  table.tt-split th{font-weight:600; font-size:10px; letter-spacing:.06em; color:var(--ink-2); background:rgba(0,0,0,0.03);}
+  /* Target table */
+  table.tt-split:not(.tt-yours) td{background:rgba(0,0,0,0.02); color:var(--ink-2);}
+  /* Yours table */
+  table.tt-split.tt-yours td.yours-cell{font-weight:700; font-size:13px;}
+  table.tt-split.tt-yours td.input-cell{color:var(--muted);}
+  table.tt-split.tt-yours td.yours-cell.match{background:rgba(58,110,58,0.2); color:var(--ok);}
+  table.tt-split.tt-yours td.yours-cell.mismatch{background:rgba(182,69,43,0.2); color:var(--accent);}
+  table.tt-split.tt-yours td.yours-cell.unset{color:var(--muted); font-weight:400;}
+
+  /* Legacy single-table (kept in case any slide still references it) */
+  table.tt-live{border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:12px;}
+  table.tt-live th, table.tt-live td{border:1px solid var(--rule); padding:5px 8px; text-align:center; min-width:30px;}
+  table.tt-live th{font-weight:600; font-size:10px; letter-spacing:.06em; color:var(--ink-2); background:rgba(0,0,0,0.02);}
+  table.tt-live th.muted-th{color:var(--muted);}
+  table.tt-live th.target-th{color:var(--ink-2); background:rgba(0,0,0,0.04);}
+  table.tt-live th.yours-th{color:var(--accent); background:rgba(182,69,43,0.06);}
+  table.tt-live td.target-cell{color:var(--ink-2); background:rgba(0,0,0,0.03);}
+  table.tt-live td.yours-cell{font-weight:700; font-size:13px;}
+  table.tt-live td.yours-cell.match{background:rgba(58,110,58,0.18); color:var(--ok);}
+  table.tt-live td.yours-cell.mismatch{background:rgba(182,69,43,0.18); color:var(--accent);}
+  table.tt-live td.yours-cell.unset{color:var(--muted); font-weight:400;}
+</style>
+</head>
+<body class="deck-bg paper-tex">
+
+<div id="deck" class="above">
+  <!-- ============== SLIDE 01 · Title ============== -->
+  <section class="slide active px-10 md:px-20 py-20 justify-center" data-stage="Workshop · Intro">
+    <div class="max-w-5xl">
+      <div class="num-tag mb-6">A workshop for product &amp; design</div>
+      <h1 class="h-display text-6xl md:text-8xl mb-8 leading-[1.02]">
+        How to <span class="underline-wave">ship software</span><br>
+        <span class="italic">well.</span>
+      </h1>
+      <p class="muted text-lg max-w-2xl leading-relaxed">
+        Git, pull requests, feature flags &mdash; the day-to-day craft of putting working software in front of real users. Plus, if time allows, a bonus tour of <em>what&rsquo;s underneath the code.</em>
+      </p>
+      <div class="mt-12 flex flex-wrap items-center gap-3 text-sm muted">
+        <span class="chip">Part 1 &middot; ~60 min &middot; Shipping software well</span>
+        <span class="chip">Part 2 &middot; ~45 min &middot; How computers actually work</span>
+      </div>
+      <div class="mt-12 text-xs muted">
+        Navigate with <span class="kbd">&larr;</span> <span class="kbd">&rarr;</span> &middot; <span class="kbd">Space</span> next &middot; <span class="kbd">Home</span> first slide
+      </div>
+    </div>
+  </section>
+  <!-- ============== PART 1 · COVER ============== -->
+  <section class="slide px-10 md:px-20 py-20 justify-center" data-stage="Part 1 · Shipping software well">
+    <div class="max-w-5xl">
+      <div class="num-tag mb-6">Part 1 &middot; ~60 minutes</div>
+      <h2 class="h-display text-6xl md:text-8xl mb-10 leading-[1.02]">
+        Shipping software<br>
+        <span class="italic accent">well.</span>
+      </h2>
+      <p class="ink-2 text-lg leading-relaxed max-w-2xl mb-10">
+        Git, pull requests, feature flags, parallel runs &mdash; the day-to-day tools and habits engineers use to put working software in front of real users.
+      </p>
+      <div class="card p-7 max-w-3xl bg-white/30">
+        <div class="thread mb-3">The thread running through everything in Part 1</div>
+        <p class="h-display text-3xl md:text-4xl leading-tight ink">
+          Good software engineering is about<br>
+          <span class="italic accent">making change safe</span><br>
+          by making it small and reversible.
+        </p>
+        <p class="muted text-sm mt-5">
+          Every practice we&rsquo;ll cover &mdash; commits, branches, PRs, feature flags, parallel runs &mdash; is a different expression of this one idea.
+        </p>
+      </div>
+    </div>
+  </section>
+<section class="slide px-10 md:px-16 py-16" data-stage="Part 1 · Git">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Part 2 · What Git really is</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-3">Git is a graph of snapshots. Not a sync tool.</h2>
+      <p class="ink-2 max-w-3xl mb-6">
+        Every <span class="font-mono">commit</span> is a frozen photo of your whole project, plus a pointer to the photo before it. A repo is a graph of these photos. A <span class="font-mono">branch</span> is a name pinned to one of them. That&rsquo;s the whole data structure.
+      </p>
+      <div class="thread mb-6">Why this matters for the thread: a graph is reversible. You can always walk back. That&rsquo;s the foundation everything below stands on.</div>
+
+      <div class="card p-6">
+        <div class="flex flex-wrap items-center gap-2 mb-5">
+          <button id="gCommit" class="btn">+ commit on current</button>
+          <button id="gBranch" class="btn btn-ghost">+ branch from current</button>
+          <button id="gMerge" class="btn btn-ghost">merge into main</button>
+          <button id="gReset" class="btn btn-ghost ml-auto">reset</button>
+          <span class="text-sm muted ml-2">current branch: <span id="gCurrent" class="font-mono ink">main</span></span>
+        </div>
+        <div class="rounded-xl paper-grid p-4 bg-white/40 overflow-x-auto">
+          <svg id="graphSvg" viewBox="0 0 900 280" class="w-full h-[280px]"></svg>
+        </div>
+        <p class="text-xs muted mt-3">
+          Each circle is a commit. Filled rust = your feature branch. Outlined = main. The arrows point to the parent commit &mdash; Git always knows where you came from, which is why it can always take you back.
+        </p>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-12" data-stage="Part 1 · Practice break">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Hands-on &middot; 15 minutes</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-10">Now play with a real Git graph.</h2>
+
+      <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-5">
+        <div class="card p-7">
+          <ol class="space-y-5 text-lg ink-2">
+            <li class="flex gap-4">
+              <span class="font-display font-bold accent shrink-0 text-2xl leading-none">1.</span>
+              <span>Open <a href="https://learngitbranching.js.org/" target="_blank" rel="noopener" class="underline accent">learngitbranching.js.org</a> in a new tab.</span>
+            </li>
+            <li class="flex gap-4">
+              <span class="font-display font-bold accent shrink-0 text-2xl leading-none">2.</span>
+              <span>Pick <strong>&ldquo;Main: Introduction Sequence&rdquo;</strong>. It has four levels.</span>
+            </li>
+            <li class="flex gap-4">
+              <span class="font-display font-bold accent shrink-0 text-2xl leading-none">3.</span>
+              <span>Work through levels <strong>1 &rarr; 4</strong>. Stop there for today.</span>
+            </li>
+          </ol>
+        </div>
+
+        <div class="card p-6 bg-white/30 flex flex-col items-center justify-center">
+          <div class="num-tag mb-3">Timer</div>
+          <div class="font-display text-8xl tabular-nums" id="lgbTimer">15:00</div>
+          <div class="flex flex-wrap items-center gap-2 mt-6">
+            <button id="lgbStart" class="btn">Start</button>
+            <button id="lgbPause" class="btn btn-ghost">Pause</button>
+            <button id="lgbReset" class="btn btn-ghost">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-12" data-stage="Part 1 · Git">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">The thing everyone fears</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-3">Merge conflicts: when the graph can&rsquo;t decide.</h2>
+      <p class="ink-2 max-w-3xl mb-5">
+        Two people edit the same lines of the same file on different branches. Git can&rsquo;t guess which version to keep, so it stops and asks. <em>That&rsquo;s a conflict &mdash; not an error, a question.</em>
+      </p>
+
+      <div class="card p-5">
+        <!-- The graph centerpiece -->
+        <div class="rounded-lg paper-grid p-4 bg-white/40 mb-4">
+          <svg id="conflictGraph" viewBox="0 0 900 200" class="w-full" style="height:200px;"></svg>
+        </div>
+
+        <!-- Story-step buttons -->
+        <div class="flex flex-wrap items-center gap-2 mb-4">
+          <span class="num-tag mr-2">Story:</span>
+          <button id="cfStep" class="btn btn-accent">▶ Next step</button>
+          <button id="cfReset" class="btn btn-ghost">↺ Restart</button>
+          <span id="cfStepLabel" class="text-sm muted ml-2">Start: a single commit on <span class="font-mono">main</span>.</span>
+        </div>
+
+        <!-- Two editor panes -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="num-tag">Developer A &middot; <span class="font-mono" style="color:var(--accent);">feat/pricing</span></span>
+            </div>
+            <textarea id="editorA" class="editor" spellcheck="false"></textarea>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="num-tag">Developer B &middot; <span class="font-mono" style="color:var(--accent-2);">feat/copy</span></span>
+            </div>
+            <textarea id="editorB" class="editor" spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <!-- Merge result (revealed after merge step) -->
+        <div id="mergeBox" class="mt-4 hidden">
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            <span class="num-tag">Merged file &middot; <span class="font-mono">file.py</span> on <span class="font-mono">main</span></span>
+            <span id="mergeStatus" class="text-sm muted ml-3"></span>
+          </div>
+          <textarea id="editorM" class="editor merged" spellcheck="false"></textarea>
+          <div class="flex flex-wrap items-center gap-2 mt-3">
+            <button id="keepA" class="btn btn-ghost hidden">Keep A&rsquo;s version</button>
+            <button id="keepB" class="btn btn-ghost hidden">Keep B&rsquo;s version</button>
+            <button id="resolveManual" class="btn btn-ghost hidden">Edit it myself</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-12" data-stage="Part 1 · Principles">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Principle 1 &middot; The branch you don&rsquo;t break</div>
+      <h2 class="h-display text-4xl md:text-6xl mb-8"><span class="font-mono accent">main</span> is sacred.</h2>
+
+      <!-- Hero SVG: the protected trunk with locked merge points -->
+      <div class="card p-8 paper-grid bg-white/30">
+        <svg viewBox="0 0 980 280" class="w-full h-auto" style="max-height:320px;">
+          <defs>
+            <linearGradient id="mainGlow" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="rgba(31,77,63,0.18)"/>
+              <stop offset="100%" stop-color="rgba(31,77,63,0)"/>
+            </linearGradient>
+          </defs>
+
+          <!-- main label badge top-left -->
+          <g>
+            <rect x="20" y="20" width="74" height="28" rx="14" fill="var(--ink)"/>
+            <text x="57" y="39" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" font-weight="700" fill="var(--paper)">main</text>
+          </g>
+
+          <!-- Soft glow band under main trunk -->
+          <rect x="20" y="140" width="940" height="40" fill="url(#mainGlow)"/>
+
+          <!-- Main trunk: thick continuous line -->
+          <line x1="40" y1="155" x2="950" y2="155" stroke="var(--accent-2)" stroke-width="5"/>
+
+          <!-- Commit nodes on main -->
+          <g>
+            <circle cx="80"  cy="155" r="10" fill="#fff8ef" stroke="var(--accent-2)" stroke-width="2.5"/>
+            <circle cx="260" cy="155" r="10" fill="#fff8ef" stroke="var(--accent-2)" stroke-width="2.5"/>
+            <circle cx="500" cy="155" r="10" fill="#fff8ef" stroke="var(--accent-2)" stroke-width="2.5"/>
+            <circle cx="740" cy="155" r="10" fill="#fff8ef" stroke="var(--accent-2)" stroke-width="2.5"/>
+            <circle cx="900" cy="155" r="10" fill="#fff8ef" stroke="var(--accent-2)" stroke-width="2.5"/>
+          </g>
+
+          <!-- Feature branch 1: arches up from c1 to c2 -->
+          <path d="M 80 155 C 110 60, 230 60, 260 155" fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <circle cx="170" cy="76" r="8" fill="var(--accent)"/>
+          <text x="170" y="58" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--accent)">feat/A</text>
+
+          <!-- Feature branch 2 -->
+          <path d="M 260 155 C 320 30, 440 30, 500 155" fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <circle cx="340" cy="55" r="8" fill="var(--accent)"/>
+          <circle cx="420" cy="55" r="8" fill="var(--accent)"/>
+          <text x="380" y="34" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--accent)">feat/B</text>
+
+          <!-- Feature branch 3 -->
+          <path d="M 500 155 C 560 70, 680 70, 740 155" fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <circle cx="620" cy="80" r="8" fill="var(--accent)"/>
+          <text x="620" y="62" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--accent)">fix/C</text>
+
+          <!-- Feature branch 4 -->
+          <path d="M 740 155 C 790 80, 850 80, 900 155" fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <circle cx="820" cy="89" r="8" fill="var(--accent)"/>
+          <text x="820" y="71" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--accent)">feat/D</text>
+
+          <!-- Padlocks at each merge point (where branches rejoin main) -->
+          <!-- A merge → c2 at x=260 -->
+          <g transform="translate(260, 200)">
+            <rect x="-13" y="-8" width="26" height="20" rx="3" fill="var(--accent-2)" stroke="var(--ink)" stroke-width="1.2"/>
+            <path d="M -7 -8 L -7 -14 Q -7 -20 0 -20 Q 7 -20 7 -14 L 7 -8" fill="none" stroke="var(--ink)" stroke-width="2"/>
+            <circle cx="0" cy="2" r="2.5" fill="#fff8ef"/>
+            <line x1="0" y1="4" x2="0" y2="8" stroke="#fff8ef" stroke-width="2"/>
+          </g>
+          <text x="260" y="240" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--ok)" font-weight="600">✓ tests pass</text>
+          <text x="260" y="254" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--ok)" font-weight="600">✓ reviewed</text>
+
+          <!-- B merge → c3 at x=500 -->
+          <g transform="translate(500, 200)">
+            <rect x="-13" y="-8" width="26" height="20" rx="3" fill="var(--accent-2)" stroke="var(--ink)" stroke-width="1.2"/>
+            <path d="M -7 -8 L -7 -14 Q -7 -20 0 -20 Q 7 -20 7 -14 L 7 -8" fill="none" stroke="var(--ink)" stroke-width="2"/>
+            <circle cx="0" cy="2" r="2.5" fill="#fff8ef"/>
+            <line x1="0" y1="4" x2="0" y2="8" stroke="#fff8ef" stroke-width="2"/>
+          </g>
+          <text x="500" y="240" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--ok)" font-weight="600">✓ tests pass</text>
+          <text x="500" y="254" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--ok)" font-weight="600">✓ reviewed</text>
+
+          <!-- C merge → c4 at x=740 -->
+          <g transform="translate(740, 200)">
+            <rect x="-13" y="-8" width="26" height="20" rx="3" fill="var(--accent-2)" stroke="var(--ink)" stroke-width="1.2"/>
+            <path d="M -7 -8 L -7 -14 Q -7 -20 0 -20 Q 7 -20 7 -14 L 7 -8" fill="none" stroke="var(--ink)" stroke-width="2"/>
+            <circle cx="0" cy="2" r="2.5" fill="#fff8ef"/>
+            <line x1="0" y1="4" x2="0" y2="8" stroke="#fff8ef" stroke-width="2"/>
+          </g>
+          <text x="740" y="240" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--ok)" font-weight="600">✓ tests pass</text>
+          <text x="740" y="254" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--ok)" font-weight="600">✓ reviewed</text>
+
+          <!-- D merge → c5 at x=900 -->
+          <g transform="translate(900, 200)">
+            <rect x="-13" y="-8" width="26" height="20" rx="3" fill="var(--accent-2)" stroke="var(--ink)" stroke-width="1.2"/>
+            <path d="M -7 -8 L -7 -14 Q -7 -20 0 -20 Q 7 -20 7 -14 L 7 -8" fill="none" stroke="var(--ink)" stroke-width="2"/>
+            <circle cx="0" cy="2" r="2.5" fill="#fff8ef"/>
+            <line x1="0" y1="4" x2="0" y2="8" stroke="#fff8ef" stroke-width="2"/>
+          </g>
+          <text x="900" y="240" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--ok)" font-weight="600">✓ tests pass</text>
+          <text x="900" y="254" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--ok)" font-weight="600">✓ reviewed</text>
+        </svg>
+      </div>
+
+      <p class="ink-2 text-lg mt-6 max-w-3xl">
+        Nothing reaches <span class="font-mono accent">main</span> without passing through a locked gate. Tests must pass. A human must review. At any moment, <span class="font-mono accent">main</span> is shippable.
+      </p>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-16" data-stage="Part 1 · Principles">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Principle 2 &middot; The economics of small</div>
+      <h2 class="h-display text-4xl md:text-6xl mb-3">Small PRs. <span class="muted">Short cycle time.</span></h2>
+      <p class="ink-2 text-lg max-w-2xl mb-10">
+        Same total work. Two ways to ship it.
+      </p>
+
+      <!-- Bar comparison: one big PR vs many small PRs, same total width -->
+      <div class="card p-8 bg-white/30 mb-8">
+        <!-- Big PR -->
+        <div class="mb-8">
+          <div class="flex items-baseline gap-4 mb-2">
+            <span class="num-tag" style="color:var(--accent);">One big PR</span>
+            <span class="text-xs muted">487 lines &middot; open 8 days &middot; nervous reviewer</span>
+          </div>
+          <svg viewBox="0 0 900 56" class="w-full" style="height:56px;">
+            <rect x="0" y="6" width="900" height="44" rx="4" fill="var(--accent)" opacity="0.85"/>
+            <text x="450" y="34" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" font-weight="600" fill="#fff8ef">redesign + refactor + bug fixes</text>
+          </svg>
+        </div>
+
+        <!-- Small PRs -->
+        <div>
+          <div class="flex items-baseline gap-4 mb-2">
+            <span class="num-tag" style="color:var(--accent-2);">Seven small PRs</span>
+            <span class="text-xs muted">~70 lines each &middot; ~1 day each &middot; reviewable in 15 min</span>
+          </div>
+          <svg viewBox="0 0 900 56" class="w-full" style="height:56px;">
+            <!-- 7 blocks across 900 width with small gaps. Each block ~118 wide, gap ~10 -->
+            <g fill="var(--accent-2)" opacity="0.85">
+              <rect x="0"   y="6" width="118" height="44" rx="4"/>
+              <rect x="128" y="6" width="118" height="44" rx="4"/>
+              <rect x="256" y="6" width="118" height="44" rx="4"/>
+              <rect x="384" y="6" width="118" height="44" rx="4"/>
+              <rect x="512" y="6" width="118" height="44" rx="4"/>
+              <rect x="640" y="6" width="118" height="44" rx="4"/>
+              <rect x="768" y="6" width="132" height="44" rx="4"/>
+            </g>
+            <!-- Subtle merge marks above each gap -->
+            <g fill="var(--muted)" font-family="JetBrains Mono, monospace" font-size="9">
+              <text x="59"  y="36" text-anchor="middle" fill="#fff8ef" font-weight="600">PR 1</text>
+              <text x="187" y="36" text-anchor="middle" fill="#fff8ef" font-weight="600">PR 2</text>
+              <text x="315" y="36" text-anchor="middle" fill="#fff8ef" font-weight="600">PR 3</text>
+              <text x="443" y="36" text-anchor="middle" fill="#fff8ef" font-weight="600">PR 4</text>
+              <text x="571" y="36" text-anchor="middle" fill="#fff8ef" font-weight="600">PR 5</text>
+              <text x="699" y="36" text-anchor="middle" fill="#fff8ef" font-weight="600">PR 6</text>
+              <text x="834" y="36" text-anchor="middle" fill="#fff8ef" font-weight="600">PR 7</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <p class="ink-2 text-lg max-w-3xl">
+        Same total work. The bottom is reviewable, revertable, and shippable at any point along the way.
+      </p>
+      <p class="muted text-sm mt-3 max-w-3xl">
+        &mdash; a 50-line PR is roughly 10&times; more likely to be reviewed carefully than a 500-line one.
+      </p>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-12" data-stage="Part 1 · Principles">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">For the curious &middot; smallness at the limit</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-3">Even scary changes break down into small PRs.</h2>
+      <p class="ink-2 max-w-3xl mb-6">
+        Real-world example: you&rsquo;re renaming <span class="font-mono">user.email</span> to <span class="font-mono">user.email_address</span> &mdash; used by twelve services across the company. The instinct is one big PR called <span class="font-mono">rename-everything</span>. The safe move is to split it across <strong>sixteen tiny PRs.</strong>
+      </p>
+
+      <div class="card p-6">
+        <svg viewBox="0 0 1100 280" class="w-full h-auto mt-2">
+          <defs>
+            <marker id="arrTl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-2)"/>
+            </marker>
+          </defs>
+
+          <!-- Lane labels -->
+          <text x="10" y="78" class="commit-label" style="font-size:12px; font-weight:600;">old column</text>
+          <text x="10" y="92" class="commit-label" style="font-size:11px; fill:var(--accent);">user.email</text>
+          <text x="10" y="148" class="commit-label" style="font-size:12px; font-weight:600;">new column</text>
+          <text x="10" y="162" class="commit-label" style="font-size:11px; fill:var(--accent-2);">user.email_address</text>
+
+          <!-- Stage 1: PR 1 — add new column alongside old -->
+          <g>
+            <rect x="120" y="65" width="120" height="36" rx="6" fill="rgba(182,69,43,0.2)" stroke="var(--accent)"/>
+            <text x="180" y="88" text-anchor="middle" class="commit-label" style="font-size:11px;">exists, used</text>
+            <rect x="120" y="135" width="120" height="36" rx="6" fill="rgba(31,77,63,0.12)" stroke="var(--accent-2)" stroke-dasharray="3,3"/>
+            <text x="180" y="158" text-anchor="middle" class="commit-label" style="font-size:11px;">exists, empty</text>
+            <text x="180" y="215" text-anchor="middle" class="commit-label" style="font-size:11px; font-weight:600;">PR 1</text>
+            <text x="180" y="232" text-anchor="middle" class="commit-label" style="font-size:10px; fill:var(--muted);">add new column</text>
+            <text x="180" y="245" text-anchor="middle" class="commit-label" style="font-size:10px; fill:var(--muted);">(migration)</text>
+          </g>
+
+          <!-- Stage 2: PR 2 — write to both -->
+          <g>
+            <rect x="260" y="65" width="160" height="36" rx="6" fill="rgba(182,69,43,0.2)" stroke="var(--accent)"/>
+            <text x="340" y="82" text-anchor="middle" class="commit-label" style="font-size:11px;">writes here ✓</text>
+            <text x="340" y="95" text-anchor="middle" class="commit-label" style="font-size:11px;">reads here ✓</text>
+            <rect x="260" y="135" width="160" height="36" rx="6" fill="rgba(31,77,63,0.2)" stroke="var(--accent-2)"/>
+            <text x="340" y="158" text-anchor="middle" class="commit-label" style="font-size:11px;">writes here ✓ (shadow)</text>
+            <text x="340" y="215" text-anchor="middle" class="commit-label" style="font-size:11px; font-weight:600;">PR 2</text>
+            <text x="340" y="232" text-anchor="middle" class="commit-label" style="font-size:10px; fill:var(--muted);">write to both</text>
+          </g>
+
+          <!-- Stage 3: PR 3 — backfill -->
+          <g>
+            <rect x="440" y="65" width="140" height="36" rx="6" fill="rgba(182,69,43,0.2)" stroke="var(--accent)"/>
+            <text x="510" y="88" text-anchor="middle" class="commit-label" style="font-size:11px;">canonical</text>
+            <rect x="440" y="135" width="140" height="36" rx="6" fill="rgba(31,77,63,0.25)" stroke="var(--accent-2)"/>
+            <text x="510" y="158" text-anchor="middle" class="commit-label" style="font-size:11px;">backfilled, identical</text>
+            <text x="510" y="215" text-anchor="middle" class="commit-label" style="font-size:11px; font-weight:600;">PR 3</text>
+            <text x="510" y="232" text-anchor="middle" class="commit-label" style="font-size:10px; fill:var(--muted);">backfill old → new</text>
+          </g>
+
+          <!-- Stage 4: PRs 4-15 — migrate readers one by one -->
+          <g>
+            <rect x="600" y="65" width="200" height="36" rx="6" fill="rgba(182,69,43,0.12)" stroke="var(--accent)" stroke-dasharray="3,3"/>
+            <text x="700" y="88" text-anchor="middle" class="commit-label" style="font-size:11px;">readers leaving (12 → 0)</text>
+            <rect x="600" y="135" width="200" height="36" rx="6" fill="rgba(31,77,63,0.3)" stroke="var(--accent-2)"/>
+            <text x="700" y="158" text-anchor="middle" class="commit-label" style="font-size:11px;">readers arriving (0 → 12)</text>
+            <text x="700" y="215" text-anchor="middle" class="commit-label" style="font-size:11px; font-weight:600;">PR 4 → 15</text>
+            <text x="700" y="232" text-anchor="middle" class="commit-label" style="font-size:10px; fill:var(--muted);">one consumer per PR</text>
+            <text x="700" y="245" text-anchor="middle" class="commit-label" style="font-size:10px; fill:var(--muted);">each one reversible</text>
+          </g>
+
+          <!-- Stage 5: PR 16 — drop old -->
+          <g>
+            <rect x="820" y="65" width="140" height="36" rx="6" fill="rgba(0,0,0,0.04)" stroke="var(--muted)" stroke-dasharray="3,3"/>
+            <text x="890" y="88" text-anchor="middle" class="commit-label" style="font-size:11px; fill:var(--muted);">dropped</text>
+            <rect x="820" y="135" width="140" height="36" rx="6" fill="rgba(31,77,63,0.3)" stroke="var(--accent-2)"/>
+            <text x="890" y="158" text-anchor="middle" class="commit-label" style="font-size:11px;">canonical</text>
+            <text x="890" y="215" text-anchor="middle" class="commit-label" style="font-size:11px; font-weight:600;">PR 16</text>
+            <text x="890" y="232" text-anchor="middle" class="commit-label" style="font-size:10px; fill:var(--muted);">drop old column</text>
+          </g>
+
+          <!-- Timeline arrow -->
+          <path d="M 110 195 L 980 195" class="branch-line" marker-end="url(#arrTl)"/>
+          <text x="990" y="199" class="commit-label" style="font-size:11px; fill:var(--muted);">time</text>
+        </svg>
+
+        <p class="ink-2 text-sm leading-relaxed mt-4">
+          Sixteen tiny reversible steps instead of one terrifying one. At every stage the system works. <strong>Any single PR can be reverted without taking the others down.</strong> The old column lives a long, redundant life on purpose &mdash; that&rsquo;s the cost of safety, and it&rsquo;s almost always worth paying.
+        </p>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-16" data-stage="Part 1 · Principles">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Principle 3 · Decouple deploy from release</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-3">Feature flags: ship the code, don&rsquo;t turn it on yet.</h2>
+      <div class="thread mb-6">Thread: a flag turns a release into a config flip. Config flips are instantly reversible. You&rsquo;ve made the change small in <em>time</em> as well as size.</div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-5">
+        <div class="card p-6">
+          <div class="num-tag mb-3">What it looks like</div>
+<pre class="code">  <span class="c">// the new checkout flow is in production code...</span>
+  <span class="k">if</span> (flags.<span class="n">isOn</span>(<span class="s">"new-checkout"</span>, user)) {
+    <span class="k">return</span> renderNewCheckout(user);
+  }
+  <span class="k">return</span> renderOldCheckout(user);  <span class="c">// ...but only this runs for now</span></pre>
+          <p class="text-sm ink-2 mt-4 leading-relaxed">
+            The code is deployed. Zero users see it. Flip the flag for the team &mdash; ten people see it. Flip it for 1% of users &mdash; collect data. Flip it for everyone &mdash; release. Flip it off &mdash; instant rollback, no deploy needed.
+          </p>
+        </div>
+        <div class="card p-6">
+          <div class="num-tag mb-3">Why this is profound</div>
+          <p class="text-sm ink-2 leading-relaxed">
+            For most of software history, &ldquo;deploying code&rdquo; and &ldquo;releasing a feature to users&rdquo; were the same event &mdash; and therefore equally scary. Flags split them in two.
+          </p>
+          <ul class="text-sm ink-2 mt-4 space-y-2">
+            <li>· <strong>Deploy</strong> &mdash; engineering act, low-risk, many times a day</li>
+            <li>· <strong>Release</strong> &mdash; product act, scheduled, can be undone</li>
+            <li>· <strong>Rollback</strong> &mdash; one config flip, seconds, no Git</li>
+          </ul>
+          <p class="text-xs muted mt-4">Concrete: the &ldquo;new checkout&rdquo; sits dormant in production for two weeks while design polishes copy. Then PM flips it to 5% on Tuesday morning. Conversion dips 0.4%. Flip it off by 10:14. No engineer required.</p>
+        </div>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-16" data-stage="Part 1 · Principles">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Principle 4 · The parallel-run principle</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-3">Run new code <span class="italic">beside</span> old code. Compare. Then switch.</h2>
+      <div class="thread mb-6">Thread: this is the most ambitious version of the thread. Even a complete rewrite can be made small and reversible if you run it next to the thing it replaces.</div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-5">
+        <div class="card p-6">
+          <div class="num-tag mb-3">The pattern</div>
+          <svg viewBox="0 0 520 240" class="w-full h-auto">
+            <!-- Input -->
+            <rect x="10" y="100" width="100" height="40" rx="6" fill="rgba(255,255,255,0.7)" stroke="var(--ink)"/>
+            <text x="60" y="125" text-anchor="middle" class="commit-label" style="font-size:12px;">incoming request</text>
+            <!-- Split -->
+            <path d="M110 120 L180 60" class="branch-line"/>
+            <path d="M110 120 L180 180" class="branch-line feat"/>
+            <!-- Old -->
+            <rect x="180" y="40" width="140" height="40" rx="6" fill="rgba(255,255,255,0.7)" stroke="var(--ink)"/>
+            <text x="250" y="65" text-anchor="middle" class="commit-label" style="font-size:12px;">OLD system (canonical)</text>
+            <!-- New -->
+            <rect x="180" y="160" width="140" height="40" rx="6" fill="rgba(182,69,43,0.1)" stroke="var(--accent)"/>
+            <text x="250" y="185" text-anchor="middle" class="commit-label" style="font-size:12px;" fill="var(--accent)">NEW system (shadow)</text>
+            <!-- Compare -->
+            <path d="M320 60 L380 120" class="branch-line"/>
+            <path d="M320 180 L380 120" class="branch-line feat"/>
+            <rect x="380" y="100" width="120" height="40" rx="6" fill="rgba(31,77,63,0.08)" stroke="var(--accent-2)"/>
+            <text x="440" y="125" text-anchor="middle" class="commit-label" style="font-size:12px;" fill="var(--accent-2)">compare outputs</text>
+          </svg>
+          <p class="text-sm ink-2 mt-4 leading-relaxed">
+            Same input goes to both. Old answer is what the user sees. New answer is recorded but ignored. Every difference is a bug or a known intentional change. When discrepancies drop to zero, flip the switch: new becomes canonical, old becomes shadow, then old is retired.
+          </p>
+        </div>
+        <div class="card p-6">
+          <div class="num-tag mb-3">The scales of the same idea</div>
+          <ul class="text-sm ink-2 space-y-3">
+            <li>
+              <strong>Smallest scale.</strong> A feature flag is a parallel run at one feature: old branch and new branch live in the same binary; the flag picks one.
+            </li>
+            <li>
+              <strong>Mid scale.</strong> A new API endpoint runs alongside the old; clients migrate; the old one is removed.
+            </li>
+            <li>
+              <strong>Largest scale.</strong> An entire system replacement &mdash; Martin Fowler describes this as <em>incremental legacy displacement</em>. The new system runs in parallel with the old, taking gradually more traffic until the old one can be retired without anyone noticing the day it disappears.
+            </li>
+          </ul>
+          <p class="text-xs muted mt-4">Same playbook from changing a button color to replacing a system that&rsquo;s older than most of the engineers working on it.</p>
+        </div>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-12" data-stage="Part 1 · Principles">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Putting it together</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-8">What &ldquo;good&rdquo; looks like.</h2>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- ===== BAD PR ===== -->
+        <div>
+          <div class="pr-card pr-bad">
+            <!-- Status row -->
+            <div class="pr-status">
+              <span class="pr-state pr-state-open">
+                <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><circle cx="8" cy="8" r="6"/></svg>
+                Open
+              </span>
+              <span class="pr-meta">#482 &middot; opened 11 days ago by @sam</span>
+            </div>
+
+            <!-- Title -->
+            <div class="pr-title">redesign settings + fix bugs + refactor api</div>
+
+            <!-- Label chips -->
+            <div class="pr-labels">
+              <span class="pr-label" style="background:rgba(182,69,43,0.18); color:var(--accent);">redesign</span>
+              <span class="pr-label" style="background:rgba(168,116,26,0.18); color:var(--warn);">refactor</span>
+              <span class="pr-label" style="background:rgba(122,111,99,0.2); color:var(--ink-2);">bugfix</span>
+              <span class="pr-label" style="background:rgba(31,77,63,0.15); color:var(--accent-2);">api</span>
+            </div>
+
+            <!-- Diff bar (long, red) -->
+            <div class="pr-diff-row">
+              <span class="pr-diff-add">+2,847</span>
+              <span class="pr-diff-rem">&minus;1,203</span>
+              <div class="pr-diff-bar">
+                <div class="pr-diff-bar-add" style="width:71%; background:var(--accent);"></div>
+                <div class="pr-diff-bar-rem" style="width:29%; background:rgba(182,69,43,0.4);"></div>
+              </div>
+              <span class="pr-files">47 files</span>
+            </div>
+          </div>
+
+          <ul class="pr-bullets mt-4">
+            <li><span class="cross">✗</span> Three unrelated concerns in one PR</li>
+            <li><span class="cross">✗</span> Reviewer rubber-stamps it &mdash; can&rsquo;t reason about it</li>
+            <li><span class="cross">✗</span> No way to revert one piece without the others</li>
+          </ul>
+        </div>
+
+        <!-- ===== GOOD PR ===== -->
+        <div>
+          <div class="pr-card pr-good">
+            <!-- Status row -->
+            <div class="pr-status">
+              <span class="pr-state pr-state-good">
+                <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0Zm3.78 5.97a.75.75 0 0 0-1.06 0L6.75 9.94 5.28 8.47a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.06 0l4.5-4.5a.75.75 0 0 0 0-1.06Z"/></svg>
+                Ready to merge
+              </span>
+              <span class="pr-meta">#493 &middot; opened 4 hours ago by @sam</span>
+            </div>
+
+            <!-- Title -->
+            <div class="pr-title">settings: render new layout behind <span class="pr-flag">new-settings</span> flag</div>
+
+            <!-- Label chips -->
+            <div class="pr-labels">
+              <span class="pr-label" style="background:rgba(31,77,63,0.15); color:var(--accent-2);">part 2/6</span>
+              <span class="pr-label" style="background:rgba(31,77,63,0.15); color:var(--accent-2);">behind-flag</span>
+            </div>
+
+            <!-- Diff bar (short, green) -->
+            <div class="pr-diff-row">
+              <span class="pr-diff-add">+138</span>
+              <span class="pr-diff-rem">&minus;12</span>
+              <div class="pr-diff-bar">
+                <div class="pr-diff-bar-add" style="width:8%; background:var(--accent-2);"></div>
+                <div class="pr-diff-bar-rem" style="width:1.5%; background:rgba(31,77,63,0.4);"></div>
+              </div>
+              <span class="pr-files">4 files</span>
+            </div>
+          </div>
+
+          <ul class="pr-bullets mt-4">
+            <li><span class="tick">✓</span> One concern. Title says exactly what it does.</li>
+            <li><span class="tick">✓</span> Behind a flag &mdash; merging changes nothing for users</li>
+            <li><span class="tick">✓</span> Reviewable in fifteen minutes</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="muted text-sm mt-8 max-w-3xl">
+        The Good PR isn&rsquo;t good because the engineer is more careful. It&rsquo;s good because the engineer made <em>smaller decisions</em> about what to put in a single change.
+      </p>
+    </div>
+  </section>
+  <!-- ============== PART 2 · COVER ============== -->
+  <section class="slide px-10 md:px-20 py-20 justify-center" data-stage="Part 2 · How computers actually work">
+    <div class="max-w-5xl">
+      <div class="num-tag mb-6">Part 2 &middot; ~45 minutes, if we have time</div>
+      <h2 class="h-display text-6xl md:text-8xl mb-10 leading-[1.02]">
+        How computers<br>
+        <span class="italic accent">actually work.</span>
+      </h2>
+      <p class="ink-2 text-lg leading-relaxed max-w-2xl mb-8">
+        Now the bonus track. We&rsquo;ll go all the way down to the metal &mdash; numerals, place value, bits, gates, the build-an-adder exercise &mdash; so the abstractions above stop feeling like magic.
+      </p>
+      <p class="muted text-base max-w-2xl">
+        Not required reading. Won&rsquo;t change how you do your job tomorrow. <em>Might</em> change how you think about what your job <em>is.</em>
+      </p>
+    </div>
+  </section>
+<section class="slide px-10 md:px-20 py-20 justify-center" data-stage="Part 2 · Foundations">
+    <div class="max-w-5xl">
+      <div class="num-tag mb-4">Part 1 · The plan</div>
+      <h2 class="h-display text-5xl md:text-6xl mb-8">Every layer of software<br>is a lie we tell ourselves<br>to stay sane.</h2>
+      <p class="text-lg ink-2 leading-relaxed max-w-3xl">
+        The computer in front of you is, physically, billions of tiny switches flipping on and off. Everything above that — files, JavaScript, your Figma plugin, GPT — is a tower of useful fictions stacked on top of those switches.
+      </p>
+      <p class="text-lg ink-2 leading-relaxed max-w-3xl mt-4">
+        We&rsquo;ll work in three movements: first <strong>how to represent numbers at all</strong> (going back five thousand years), then <strong>how computers store them</strong>, then <strong>how computers act on them</strong>. Each layer earns the next.
+      </p>
+      <div class="mt-10 max-w-2xl">
+        <!-- Bottom-up stack: foundation at the base, abstractions resting on top -->
+        <div class="flex flex-col gap-2">
+          <!-- Layer 3 (top, most abstract) -->
+          <div class="rounded-lg flex items-center gap-4 px-5 py-4 border" style="background:rgba(255,255,255,0.35); border-color:var(--rule);">
+            <div class="font-display text-2xl muted" style="width:36px;">3</div>
+            <div class="font-mono text-sm flex-1">Act on the bits</div>
+            <div class="text-xs muted hidden sm:block">addition, logic &mdash; gates, instructions</div>
+          </div>
+          <!-- Layer 2 -->
+          <div class="rounded-lg flex items-center gap-4 px-5 py-4 border" style="background:rgba(255,255,255,0.55); border-color:var(--rule);">
+            <div class="font-display text-2xl ink-2" style="width:36px;">2</div>
+            <div class="font-mono text-sm flex-1">Store as bits</div>
+            <div class="text-xs muted hidden sm:block">switches, base 2, eight bits = one byte</div>
+          </div>
+          <!-- Layer 1 (bottom, foundation) -->
+          <div class="rounded-lg flex items-center gap-4 px-5 py-4 border" style="background:rgba(255,255,255,0.8); border-color:var(--ink); border-width:1.5px;">
+            <div class="font-display text-2xl ink" style="width:36px;">1</div>
+            <div class="font-mono text-sm flex-1">Represent numbers</div>
+            <div class="text-xs muted hidden sm:block">numerals, place value, base &mdash; five thousand years old</div>
+          </div>
+          <!-- Ground line -->
+          <div class="flex items-center gap-3 pt-1 pl-1">
+            <div class="h-px flex-1" style="background:repeating-linear-gradient(90deg, var(--rule) 0 8px, transparent 8px 14px);"></div>
+            <span class="num-tag" style="font-size:10px;">foundation</span>
+          </div>
+        </div>
+        <p class="muted text-xs mt-4">Read bottom-up. Each layer earns the next.</p>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-16" data-stage="Part 2 · Representing">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Step 1 · Storing numbers</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-4">First, a question we never ask:<br><span class="italic">how do you write down a number?</span></h2>
+      <p class="ink-2 text-lg max-w-3xl mb-10">
+        The number twelve exists. <span class="font-mono">12</span> is just one way to write it. Other humans, at other times and in other places, wrote the same number very differently &mdash; and there&rsquo;s nothing inevitable about the way <em>you</em> learned.
+      </p>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="card p-5 text-center">
+          <div class="h-display text-5xl mb-2">XII</div>
+          <div class="num-tag">Roman</div>
+          <div class="text-xs muted mt-2">Ten + one + one</div>
+        </div>
+        <div class="card p-5 text-center">
+          <div class="h-display text-5xl mb-2" style="font-family:'Fraunces',serif;">十二</div>
+          <div class="num-tag">Chinese</div>
+          <div class="text-xs muted mt-2">&ldquo;Ten two&rdquo;</div>
+        </div>
+        <div class="card p-5 text-center">
+          <svg viewBox="0 0 140 50" class="mx-auto mb-3" style="height:44px;">
+            <g stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round">
+              <!-- Group of 5: four verticals + diagonal -->
+              <line x1="8"  y1="6" x2="8"  y2="42"/>
+              <line x1="16" y1="6" x2="16" y2="42"/>
+              <line x1="24" y1="6" x2="24" y2="42"/>
+              <line x1="32" y1="6" x2="32" y2="42"/>
+              <line x1="4"  y1="38" x2="36" y2="10"/>
+              <!-- Group of 5 -->
+              <line x1="58" y1="6" x2="58" y2="42"/>
+              <line x1="66" y1="6" x2="66" y2="42"/>
+              <line x1="74" y1="6" x2="74" y2="42"/>
+              <line x1="82" y1="6" x2="82" y2="42"/>
+              <line x1="54" y1="38" x2="86" y2="10"/>
+              <!-- Remaining 2 -->
+              <line x1="108" y1="6" x2="108" y2="42"/>
+              <line x1="116" y1="6" x2="116" y2="42"/>
+            </g>
+          </svg>
+          <div class="num-tag">Tally</div>
+          <div class="text-xs muted mt-2">Five-barred gate, then 2</div>
+        </div>
+        <div class="card p-5 text-center" style="border-color:var(--accent); border-width:1.5px;">
+          <div class="h-display text-5xl mb-2 accent">12</div>
+          <div class="num-tag">Hindu-Arabic</div>
+          <div class="text-xs muted mt-2">What you grew up with</div>
+        </div>
+      </div>
+
+      <p class="muted text-sm mt-10 max-w-3xl">
+        Five symbols. One number. The difference between them isn&rsquo;t just aesthetics &mdash; it&rsquo;s about <em>how easy each one is to do math with.</em> Which is where the next slide goes.
+      </p>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-16" data-stage="Part 2 · Representing">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Step 2 · The trick that made math possible</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-4">Place value: <span class="italic">where</span> a digit sits matters as much as <span class="italic">what</span> it is.</h2>
+      <p class="ink-2 text-lg max-w-3xl mb-8">
+        The same digit means a different amount depending on its column. <span class="font-mono">7</span> in the ones place is seven. <span class="font-mono">7</span> in the hundreds place is seven hundred. Obvious? Yes &mdash; <em>now</em>. It took humans roughly five thousand years to invent.
+      </p>
+
+      <div class="card p-6 mb-6">
+        <div class="num-tag mb-4">Reading 1,247 the way you secretly already do</div>
+        <div class="grid grid-cols-4 gap-3 text-center font-mono">
+          <div>
+            <div class="text-7xl h-display accent">1</div>
+            <div class="text-xs muted mt-2">× 1000</div>
+            <div class="text-sm ink-2 mt-1">= 1000</div>
+          </div>
+          <div>
+            <div class="text-7xl h-display accent">2</div>
+            <div class="text-xs muted mt-2">× 100</div>
+            <div class="text-sm ink-2 mt-1">= 200</div>
+          </div>
+          <div>
+            <div class="text-7xl h-display accent">4</div>
+            <div class="text-xs muted mt-2">× 10</div>
+            <div class="text-sm ink-2 mt-1">= 40</div>
+          </div>
+          <div>
+            <div class="text-7xl h-display accent">7</div>
+            <div class="text-xs muted mt-2">× 1</div>
+            <div class="text-sm ink-2 mt-1">= 7</div>
+          </div>
+        </div>
+        <div class="divider my-4"></div>
+        <div class="text-center font-mono text-xl">1000 + 200 + 40 + 7 &nbsp;=&nbsp; <strong class="accent">1,247</strong></div>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-14" data-stage="Part 2 · Representing">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Step 3 · Place value in base 2</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-3">Eight switches. 256 numbers.</h2>
+      <p class="ink-2 max-w-2xl mb-10">
+        Same place-value trick, smaller base. Each column doubles as you move left.
+      </p>
+
+      <div class="card p-8 max-w-3xl mx-auto">
+        <!-- The ladder, as a table for clean row separators -->
+        <table class="ladder-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>128</th><th>64</th><th>32</th><th>16</th><th>8</th><th>4</th><th>2</th><th>1</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="dec">0</td>  <td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td></tr>
+            <tr><td class="dec">1</td>  <td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="on">1</td></tr>
+            <tr><td class="dec">2</td>  <td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="on">1</td><td class="off">0</td></tr>
+            <tr><td class="dec">3</td>  <td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="on">1</td><td class="on">1</td></tr>
+            <tr><td class="dec">4</td>  <td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="on">1</td><td class="off">0</td><td class="off">0</td></tr>
+            <tr><td class="dec">5</td>  <td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="on">1</td><td class="off">0</td><td class="on">1</td></tr>
+            <tr><td class="dec">6</td>  <td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="on">1</td><td class="on">1</td><td class="off">0</td></tr>
+            <tr><td class="dec">7</td>  <td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="off">0</td><td class="on">1</td><td class="on">1</td><td class="on">1</td></tr>
+            <tr class="ellipsis"><td class="dec">&hellip;</td><td colspan="8">&hellip;</td></tr>
+            <tr><td class="dec">255</td><td class="on">1</td><td class="on">1</td><td class="on">1</td><td class="on">1</td><td class="on">1</td><td class="on">1</td><td class="on">1</td><td class="on">1</td></tr>
+          </tbody>
+        </table>
+
+        <p class="text-sm muted mt-6 text-center max-w-lg mx-auto">
+          The rightmost bit ticks. When it overflows, the next column carries &mdash; exactly like ones-place rolling over to tens in decimal.
+        </p>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-14" data-stage="Part 2 · Representing">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Step 3, continued · How bits live in matter</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-3">Two digits. That&rsquo;s it.</h2>
+      <p class="ink-2 text-lg max-w-2xl mb-10">
+        Why? Because two states are the easiest thing the universe can hold reliably.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Electricity -->
+        <div class="card p-5">
+          <div class="num-tag mb-3">Electricity</div>
+          <svg viewBox="0 0 280 90" class="w-full h-auto mb-3">
+            <g font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">
+              <!-- 7 cells, pattern 1 0 1 1 0 1 0 -->
+              <!-- Cell 1: HIGH (1) -->
+              <rect x="14"  y="16" width="32" height="58" fill="rgba(182,69,43,0.08)" stroke="var(--rule)"/>
+              <text x="30" y="9" text-anchor="middle">1</text>
+              <line x1="20" y1="55" x2="40" y2="55" stroke="var(--accent)" stroke-width="2.5"/>
+              <text x="30" y="68" text-anchor="middle" font-size="8" font-weight="400" fill="var(--accent)">HIGH</text>
+              <!-- Cell 2: LOW (0) -->
+              <rect x="50"  y="16" width="32" height="58" fill="rgba(0,0,0,0.04)" stroke="var(--rule)"/>
+              <text x="66" y="9" text-anchor="middle" fill="var(--muted)">0</text>
+              <line x1="56" y1="68" x2="76" y2="68" stroke="var(--ink-2)" stroke-width="2.5"/>
+              <text x="66" y="60" text-anchor="middle" font-size="8" font-weight="400" fill="var(--muted)">LOW</text>
+              <!-- Cell 3: HIGH (1) -->
+              <rect x="86"  y="16" width="32" height="58" fill="rgba(182,69,43,0.08)" stroke="var(--rule)"/>
+              <text x="102" y="9" text-anchor="middle">1</text>
+              <line x1="92" y1="55" x2="112" y2="55" stroke="var(--accent)" stroke-width="2.5"/>
+              <text x="102" y="68" text-anchor="middle" font-size="8" font-weight="400" fill="var(--accent)">HIGH</text>
+              <!-- Cell 4: HIGH (1) -->
+              <rect x="122" y="16" width="32" height="58" fill="rgba(182,69,43,0.08)" stroke="var(--rule)"/>
+              <text x="138" y="9" text-anchor="middle">1</text>
+              <line x1="128" y1="55" x2="148" y2="55" stroke="var(--accent)" stroke-width="2.5"/>
+              <text x="138" y="68" text-anchor="middle" font-size="8" font-weight="400" fill="var(--accent)">HIGH</text>
+              <!-- Cell 5: LOW (0) -->
+              <rect x="158" y="16" width="32" height="58" fill="rgba(0,0,0,0.04)" stroke="var(--rule)"/>
+              <text x="174" y="9" text-anchor="middle" fill="var(--muted)">0</text>
+              <line x1="164" y1="68" x2="184" y2="68" stroke="var(--ink-2)" stroke-width="2.5"/>
+              <text x="174" y="60" text-anchor="middle" font-size="8" font-weight="400" fill="var(--muted)">LOW</text>
+              <!-- Cell 6: HIGH (1) -->
+              <rect x="194" y="16" width="32" height="58" fill="rgba(182,69,43,0.08)" stroke="var(--rule)"/>
+              <text x="210" y="9" text-anchor="middle">1</text>
+              <line x1="200" y1="55" x2="220" y2="55" stroke="var(--accent)" stroke-width="2.5"/>
+              <text x="210" y="68" text-anchor="middle" font-size="8" font-weight="400" fill="var(--accent)">HIGH</text>
+              <!-- Cell 7: LOW (0) -->
+              <rect x="230" y="16" width="32" height="58" fill="rgba(0,0,0,0.04)" stroke="var(--rule)"/>
+              <text x="246" y="9" text-anchor="middle" fill="var(--muted)">0</text>
+              <line x1="236" y1="68" x2="256" y2="68" stroke="var(--ink-2)" stroke-width="2.5"/>
+              <text x="246" y="60" text-anchor="middle" font-size="8" font-weight="400" fill="var(--muted)">LOW</text>
+            </g>
+          </svg>
+          <p class="text-xs ink-2">Voltage high or low.</p>
+        </div>
+
+        <!-- Magnetism -->
+        <div class="card p-5">
+          <div class="num-tag mb-3">Magnetism</div>
+          <svg viewBox="0 0 280 90" class="w-full h-auto mb-3">
+            <g font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">
+              <!-- Cell 1: UP (1) -->
+              <rect x="14"  y="16" width="32" height="58" fill="rgba(182,69,43,0.08)" stroke="var(--rule)"/>
+              <text x="30" y="9" text-anchor="middle">1</text>
+              <line x1="30" y1="64" x2="30" y2="34" stroke="var(--accent)" stroke-width="2.5"/>
+              <path d="M26 38 L30 30 L34 38 Z" fill="var(--accent)"/>
+              <!-- Cell 2: DOWN (0) -->
+              <rect x="50"  y="16" width="32" height="58" fill="rgba(0,0,0,0.04)" stroke="var(--rule)"/>
+              <text x="66" y="9" text-anchor="middle" fill="var(--muted)">0</text>
+              <line x1="66" y1="34" x2="66" y2="64" stroke="var(--ink-2)" stroke-width="2.5"/>
+              <path d="M62 60 L66 68 L70 60 Z" fill="var(--ink-2)"/>
+              <!-- Cell 3: UP (1) -->
+              <rect x="86"  y="16" width="32" height="58" fill="rgba(182,69,43,0.08)" stroke="var(--rule)"/>
+              <text x="102" y="9" text-anchor="middle">1</text>
+              <line x1="102" y1="64" x2="102" y2="34" stroke="var(--accent)" stroke-width="2.5"/>
+              <path d="M98 38 L102 30 L106 38 Z" fill="var(--accent)"/>
+              <!-- Cell 4: UP (1) -->
+              <rect x="122" y="16" width="32" height="58" fill="rgba(182,69,43,0.08)" stroke="var(--rule)"/>
+              <text x="138" y="9" text-anchor="middle">1</text>
+              <line x1="138" y1="64" x2="138" y2="34" stroke="var(--accent)" stroke-width="2.5"/>
+              <path d="M134 38 L138 30 L142 38 Z" fill="var(--accent)"/>
+              <!-- Cell 5: DOWN (0) -->
+              <rect x="158" y="16" width="32" height="58" fill="rgba(0,0,0,0.04)" stroke="var(--rule)"/>
+              <text x="174" y="9" text-anchor="middle" fill="var(--muted)">0</text>
+              <line x1="174" y1="34" x2="174" y2="64" stroke="var(--ink-2)" stroke-width="2.5"/>
+              <path d="M170 60 L174 68 L178 60 Z" fill="var(--ink-2)"/>
+              <!-- Cell 6: UP (1) -->
+              <rect x="194" y="16" width="32" height="58" fill="rgba(182,69,43,0.08)" stroke="var(--rule)"/>
+              <text x="210" y="9" text-anchor="middle">1</text>
+              <line x1="210" y1="64" x2="210" y2="34" stroke="var(--accent)" stroke-width="2.5"/>
+              <path d="M206 38 L210 30 L214 38 Z" fill="var(--accent)"/>
+              <!-- Cell 7: DOWN (0) -->
+              <rect x="230" y="16" width="32" height="58" fill="rgba(0,0,0,0.04)" stroke="var(--rule)"/>
+              <text x="246" y="9" text-anchor="middle" fill="var(--muted)">0</text>
+              <line x1="246" y1="34" x2="246" y2="64" stroke="var(--ink-2)" stroke-width="2.5"/>
+              <path d="M242 60 L246 68 L250 60 Z" fill="var(--ink-2)"/>
+            </g>
+          </svg>
+          <p class="text-xs ink-2">Magnet pointing up or down.</p>
+        </div>
+
+        <!-- Light -->
+        <div class="card p-5">
+          <div class="num-tag mb-3">Light</div>
+          <svg viewBox="0 0 280 90" class="w-full h-auto mb-3">
+            <g font-family="JetBrains Mono, monospace" font-size="11" font-weight="700">
+              <!-- Cell 1: ON (1) -->
+              <rect x="14"  y="16" width="32" height="58" fill="rgba(182,69,43,0.08)" stroke="var(--rule)"/>
+              <text x="30" y="9" text-anchor="middle">1</text>
+              <circle cx="30" cy="48" r="11" fill="var(--accent)" opacity="0.9"/>
+              <circle cx="30" cy="48" r="16" fill="var(--accent)" opacity="0.18"/>
+              <!-- Cell 2: OFF (0) -->
+              <rect x="50"  y="16" width="32" height="58" fill="rgba(0,0,0,0.04)" stroke="var(--rule)"/>
+              <text x="66" y="9" text-anchor="middle" fill="var(--muted)">0</text>
+              <circle cx="66" cy="48" r="11" fill="none" stroke="var(--ink-2)" stroke-width="1.2" stroke-dasharray="2 2"/>
+              <!-- Cell 3: ON (1) -->
+              <rect x="86"  y="16" width="32" height="58" fill="rgba(182,69,43,0.08)" stroke="var(--rule)"/>
+              <text x="102" y="9" text-anchor="middle">1</text>
+              <circle cx="102" cy="48" r="11" fill="var(--accent)" opacity="0.9"/>
+              <circle cx="102" cy="48" r="16" fill="var(--accent)" opacity="0.18"/>
+              <!-- Cell 4: ON (1) -->
+              <rect x="122" y="16" width="32" height="58" fill="rgba(182,69,43,0.08)" stroke="var(--rule)"/>
+              <text x="138" y="9" text-anchor="middle">1</text>
+              <circle cx="138" cy="48" r="11" fill="var(--accent)" opacity="0.9"/>
+              <circle cx="138" cy="48" r="16" fill="var(--accent)" opacity="0.18"/>
+              <!-- Cell 5: OFF (0) -->
+              <rect x="158" y="16" width="32" height="58" fill="rgba(0,0,0,0.04)" stroke="var(--rule)"/>
+              <text x="174" y="9" text-anchor="middle" fill="var(--muted)">0</text>
+              <circle cx="174" cy="48" r="11" fill="none" stroke="var(--ink-2)" stroke-width="1.2" stroke-dasharray="2 2"/>
+              <!-- Cell 6: ON (1) -->
+              <rect x="194" y="16" width="32" height="58" fill="rgba(182,69,43,0.08)" stroke="var(--rule)"/>
+              <text x="210" y="9" text-anchor="middle">1</text>
+              <circle cx="210" cy="48" r="11" fill="var(--accent)" opacity="0.9"/>
+              <circle cx="210" cy="48" r="16" fill="var(--accent)" opacity="0.18"/>
+              <!-- Cell 7: OFF (0) -->
+              <rect x="230" y="16" width="32" height="58" fill="rgba(0,0,0,0.04)" stroke="var(--rule)"/>
+              <text x="246" y="9" text-anchor="middle" fill="var(--muted)">0</text>
+              <circle cx="246" cy="48" r="11" fill="none" stroke="var(--ink-2)" stroke-width="1.2" stroke-dasharray="2 2"/>
+            </g>
+          </svg>
+          <p class="text-xs ink-2">Light on or off.</p>
+        </div>
+      </div>
+
+      <p class="muted text-xs mt-6 max-w-3xl">
+        Three different physical media. Same encoding. Same bit pattern: <span class="font-mono">1 0 1 1 0 1 0</span>.
+      </p>
+    </div>
+  </section><section class="slide px-10 md:px-20 py-20 justify-center" data-stage="Part 2 · Acting on numbers">
+    <div class="max-w-5xl">
+      <div class="num-tag mb-6">End of movement 1 · Beginning of movement 2</div>
+      <h2 class="h-display text-5xl md:text-7xl mb-8 leading-[1.05]">
+        OK. We can <span class="italic">store</span><br>
+        numbers as bits.<br>
+        <span class="accent">Now how do we<br>do anything with them?</span>
+      </h2>
+      <p class="ink-2 text-lg max-w-2xl">
+        Storage is half the story. The other half is <em>acting</em> on what&rsquo;s stored &mdash; adding, comparing, transforming. That&rsquo;s where gates come in.
+      </p>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-12" data-stage="Part 2 · Acting on numbers">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">A simple goal</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-3">Add two bits.</h2>
+      <p class="ink-2 max-w-3xl mb-10">
+        Sounds trivial. Let&rsquo;s look at all four cases &mdash; and notice what happens in the last one.
+      </p>
+
+      <!-- The four addition cases, shown as written-out sums -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 max-w-4xl mx-auto">
+        <div class="card p-5 text-center font-mono">
+          <div class="text-3xl">&nbsp;&nbsp;0</div>
+          <div class="text-3xl">+&nbsp;0</div>
+          <div class="divider my-2"></div>
+          <div class="text-4xl ink">&nbsp;&nbsp;0</div>
+        </div>
+        <div class="card p-5 text-center font-mono">
+          <div class="text-3xl">&nbsp;&nbsp;0</div>
+          <div class="text-3xl">+&nbsp;1</div>
+          <div class="divider my-2"></div>
+          <div class="text-4xl ink">&nbsp;&nbsp;1</div>
+        </div>
+        <div class="card p-5 text-center font-mono">
+          <div class="text-3xl">&nbsp;&nbsp;1</div>
+          <div class="text-3xl">+&nbsp;0</div>
+          <div class="divider my-2"></div>
+          <div class="text-4xl ink">&nbsp;&nbsp;1</div>
+        </div>
+        <div class="card p-5 text-center font-mono" style="border-color:var(--accent); border-width:1.5px;">
+          <div class="text-3xl">&nbsp;&nbsp;1</div>
+          <div class="text-3xl">+&nbsp;1</div>
+          <div class="divider my-2"></div>
+          <div class="text-4xl accent">1&nbsp;0</div>
+          <div class="text-xs muted mt-1" style="font-family:'Inter',sans-serif;">two digits!</div>
+        </div>
+      </div>
+
+      <!-- The conclusion -->
+      <div class="card p-6 max-w-3xl mx-auto bg-white/40">
+        <p class="ink-2 text-base mb-4 leading-relaxed">
+          Same thing happens in decimal &mdash; <span class="font-mono">7 + 5 = 12</span>. The result has more digits than the inputs, so the leftmost digit <em>carries</em> into a new column. We need a way to represent that.
+        </p>
+        <p class="h-display text-2xl md:text-3xl leading-tight">
+          <span class="muted">So we need <strong class="ink">two</strong> output bits.</span><br>
+          We&rsquo;ll call the right one <span class="accent">Sum</span>, the left one <span class="accent">Carry</span>.
+        </p>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-16" data-stage="Part 2 · Acting on numbers">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Step 4 · Acting on the bits</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-3">Gates: the only verbs a computer knows.</h2>
+      <p class="ink-2 max-w-3xl mb-8">
+        A logic gate takes one or two bits in and gives one bit out. Three is enough to build everything above. Click the <span class="font-mono">A</span> and <span class="font-mono">B</span> cells to toggle inputs; the row matching your inputs lights up.
+      </p>
+
+      <div id="gates" data-gates="AND,OR,NOT" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+
+      <div class="mt-8 card p-5 max-w-3xl">
+        <div class="num-tag mb-2">Got it?</div>
+        <p class="text-sm ink-2 leading-relaxed">
+          <span class="font-mono">AND</span> &mdash; both true. <span class="font-mono">OR</span> &mdash; at least one true. <span class="font-mono">NOT</span> &mdash; the opposite. These three are <em>universal</em> &mdash; any computation a computer can do can be built from them. Including, it turns out, arithmetic. Let&rsquo;s prove it.
+        </p>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-12" data-stage="Part 2 · Your turn">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Exercise · 5 minutes</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-3">Your turn: build an adder.</h2>
+      <p class="ink-2 max-w-3xl mb-4">
+        Two input bits A and B. Two output bits <strong>Sum</strong> and <strong>Carry</strong>. The truth table on the right is what you&rsquo;re aiming for.
+      </p>
+      <p class="ink-2 max-w-3xl mb-5">
+        You have <span class="font-mono">AND</span>, <span class="font-mono">OR</span>, <span class="font-mono">NOT</span>. Drag onto the canvas. Click an output port, then an input port, to wire them. Hit <strong>Test</strong> when ready. <span class="muted">Heads up: one of these two is easy, the other is genuinely tricky.</span>
+      </p>
+
+      <div class="card p-4">
+        <!-- Palette + controls -->
+        <div class="flex flex-wrap items-center gap-3 mb-3 pb-3 border-b rule">
+          <span class="num-tag mr-2">Gate palette</span>
+          <div class="gate-chip" draggable="true" data-type="AND"><span class="gate-pill and">AND</span></div>
+          <div class="gate-chip" draggable="true" data-type="OR"><span class="gate-pill or">OR</span></div>
+          <div class="gate-chip" draggable="true" data-type="NOT"><span class="gate-pill not">NOT</span></div>
+          <div class="ml-auto flex items-center gap-2">
+            <button id="circTest" class="btn btn-accent">▶ Test all 4 cases</button>
+            <button id="circClear" class="btn btn-ghost">Clear</button>
+            <button id="circHint" class="btn btn-ghost">Hint</button>
+          </div>
+        </div>
+
+        <!-- Canvas + truth-table side-by-side -->
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4">
+          <div id="circCanvas" class="paper-grid rounded-lg relative" style="height:440px; background-color: rgba(255,255,255,0.35);">
+            <svg id="circWires" class="absolute inset-0 w-full h-full pointer-events-none" style="z-index:1;"></svg>
+          </div>
+          <div class="truth-panel">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="num-tag mb-2 target-label">Target</div>
+                <table class="tt-split" id="circTarget">
+                  <thead><tr><th>A</th><th>B</th><th>S</th><th>C</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div>
+                <div class="num-tag mb-2 yours-label">Yours</div>
+                <table class="tt-split tt-yours" id="circYours">
+                  <thead><tr><th>A</th><th>B</th><th>S</th><th>C</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="text-[10px] muted mt-3">
+              <span class="inline-block w-2 h-2 align-middle" style="background:rgba(58,110,58,0.35); border-radius:2px;"></span> match &nbsp;
+              <span class="inline-block w-2 h-2 align-middle" style="background:rgba(182,69,43,0.35); border-radius:2px;"></span> mismatch
+            </div>
+          </div>
+        </div>
+
+        <!-- Result strip -->
+        <div id="circResult" class="mt-3 flex flex-wrap items-center gap-3 text-sm">
+          <span class="muted">Wire it up. The truth table on the right updates live.</span>
+        </div>
+      </div>
+
+      <p class="muted text-xs mt-4 max-w-3xl">
+        Facilitator: most of the room will get Carry quickly and get stuck on Sum. That&rsquo;s the point &mdash; let it happen. Don&rsquo;t reveal the answer; the next slide will turn the struggle into a question worth asking.
+      </p>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-16" data-stage="Part 2 · Acting on numbers">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="num-tag mb-3">A new gate, free of charge</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-4"><span class="font-mono accent">XOR</span> &mdash; the &ldquo;different&rdquo; gate.</h2>
+      <p class="ink-2 max-w-3xl mb-8">
+        It outputs 1 when its inputs differ, 0 when they&rsquo;re the same. Click A and B to toggle.
+      </p>
+
+      <div id="xorIntro" data-gates="XOR" class="grid grid-cols-1 max-w-md"></div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-12" data-stage="Part 2 · Your turn">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Exercise · take 2 · 4 minutes</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-3">Same problem. One new tool.</h2>
+      <p class="ink-2 max-w-3xl mb-5">
+        Try the adder again, now with XOR in your palette. The Sum case should suddenly be a lot less painful.
+      </p>
+
+      <div class="card p-4">
+        <!-- Palette + controls -->
+        <div class="flex flex-wrap items-center gap-3 mb-3 pb-3 border-b rule">
+          <span class="num-tag mr-2">Gate palette</span>
+          <div class="gate-chip" draggable="true" data-type="AND" data-builder="xor2"><span class="gate-pill and">AND</span></div>
+          <div class="gate-chip" draggable="true" data-type="OR"  data-builder="xor2"><span class="gate-pill or">OR</span></div>
+          <div class="gate-chip" draggable="true" data-type="NOT" data-builder="xor2"><span class="gate-pill not">NOT</span></div>
+          <div class="gate-chip" draggable="true" data-type="XOR" data-builder="xor2"><span class="gate-pill xor">XOR</span></div>
+          <div class="ml-auto flex items-center gap-2">
+            <button id="circ2Test" class="btn btn-accent">▶ Test all 4 cases</button>
+            <button id="circ2Clear" class="btn btn-ghost">Clear</button>
+            <button id="circ2Hint" class="btn btn-ghost">Hint</button>
+          </div>
+        </div>
+
+        <!-- Canvas + truth-table side-by-side -->
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4">
+          <div id="circ2Canvas" class="paper-grid rounded-lg relative" style="height:440px; background-color: rgba(255,255,255,0.35);">
+            <svg id="circ2Wires" class="absolute inset-0 w-full h-full pointer-events-none" style="z-index:1;"></svg>
+          </div>
+          <div class="truth-panel">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="num-tag mb-2 target-label">Target</div>
+                <table class="tt-split" id="circ2Target">
+                  <thead><tr><th>A</th><th>B</th><th>S</th><th>C</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div>
+                <div class="num-tag mb-2 yours-label">Yours</div>
+                <table class="tt-split tt-yours" id="circ2Yours">
+                  <thead><tr><th>A</th><th>B</th><th>S</th><th>C</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="text-[10px] muted mt-3">
+              <span class="inline-block w-2 h-2 align-middle" style="background:rgba(58,110,58,0.35); border-radius:2px;"></span> match &nbsp;
+              <span class="inline-block w-2 h-2 align-middle" style="background:rgba(182,69,43,0.35); border-radius:2px;"></span> mismatch
+            </div>
+          </div>
+        </div>
+
+        <div id="circ2Result" class="mt-3 flex flex-wrap items-center gap-3 text-sm">
+          <span class="muted">Two gates is enough. Carry from before still works the same way.</span>
+        </div>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-12" data-stage="Part 2 · Your turn">
+    <div class="max-w-6xl mx-auto w-full">
+      <div class="num-tag mb-3">Bonus exercise &middot; if you&rsquo;re curious</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-3">XOR isn&rsquo;t fundamental.</h2>
+      <p class="ink-2 max-w-3xl mb-5">
+        AND, OR, and NOT are enough to build everything a computer does &mdash; including XOR. The pattern is so common that we gave it a name and use it as a single gate. <strong>That&rsquo;s abstraction.</strong> Try building XOR yourself. <span class="muted">Hint: &ldquo;at least one is on, but not both.&rdquo;</span>
+      </p>
+
+      <div class="card p-4">
+        <!-- Palette + controls -->
+        <div class="flex flex-wrap items-center gap-3 mb-3 pb-3 border-b rule">
+          <span class="num-tag mr-2">Gate palette</span>
+          <div class="gate-chip" draggable="true" data-type="AND" data-builder="xor"><span class="gate-pill and">AND</span></div>
+          <div class="gate-chip" draggable="true" data-type="OR"  data-builder="xor"><span class="gate-pill or">OR</span></div>
+          <div class="gate-chip" draggable="true" data-type="NOT" data-builder="xor"><span class="gate-pill not">NOT</span></div>
+          <div class="ml-auto flex items-center gap-2">
+            <button id="xorTest" class="btn btn-accent">▶ Test</button>
+            <button id="xorClear" class="btn btn-ghost">Clear</button>
+            <button id="xorHint" class="btn btn-ghost">Hint</button>
+          </div>
+        </div>
+
+        <!-- Canvas + truth-table side-by-side -->
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4">
+          <div id="xorCanvas" class="paper-grid rounded-lg relative" style="height:380px; background-color: rgba(255,255,255,0.35);">
+            <svg id="xorWires" class="absolute inset-0 w-full h-full pointer-events-none" style="z-index:1;"></svg>
+          </div>
+          <div class="truth-panel">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="num-tag mb-2 target-label">Target</div>
+                <table class="tt-split" id="xorTarget">
+                  <thead><tr><th>A</th><th>B</th><th>Out</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div>
+                <div class="num-tag mb-2 yours-label">Yours</div>
+                <table class="tt-split tt-yours" id="xorYours">
+                  <thead><tr><th>A</th><th>B</th><th>Out</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="text-[10px] muted mt-3">
+              <span class="inline-block w-2 h-2 align-middle" style="background:rgba(58,110,58,0.35); border-radius:2px;"></span> match &nbsp;
+              <span class="inline-block w-2 h-2 align-middle" style="background:rgba(182,69,43,0.35); border-radius:2px;"></span> mismatch
+            </div>
+          </div>
+        </div>
+
+        <div id="xorResult" class="mt-3 flex flex-wrap items-center gap-3 text-sm">
+          <span class="muted">Three gates is enough.</span>
+        </div>
+      </div>
+
+      <p class="muted text-xs mt-4 max-w-3xl">
+        Side note: the two-gate adder you just built has a name too &mdash; engineers call it a <strong class="ink-2">half-adder</strong>. Chain a few together and you can add bigger numbers. That&rsquo;s a CPU&rsquo;s arithmetic unit, give or take.
+      </p>
+    </div>
+  </section><section class="slide px-10 md:px-16 py-16" data-stage="Part 2 · Acting on numbers">
+    <div class="max-w-5xl mx-auto w-full">
+      <div class="num-tag mb-3">The ladder up</div>
+      <h2 class="h-display text-4xl md:text-5xl mb-10">Same operation, four layers.</h2>
+
+      <!-- Bottom-up stack: layer 0 at the floor, layer 3 at the top -->
+      <div class="flex flex-col gap-2 max-w-3xl mx-auto">
+        <!-- Layer 3 (top, most abstract) -->
+        <div class="layer-row" style="background:rgba(255,255,255,0.4);">
+          <div class="layer-num">3</div>
+          <div class="layer-name">LLM</div>
+          <pre class="code layer-code">"what's three plus four"</pre>
+        </div>
+        <!-- Layer 2 -->
+        <div class="layer-row" style="background:rgba(255,255,255,0.55);">
+          <div class="layer-num">2</div>
+          <div class="layer-name">Python</div>
+          <pre class="code layer-code">x = 3 + 4</pre>
+        </div>
+        <!-- Layer 1 -->
+        <div class="layer-row" style="background:rgba(255,255,255,0.7);">
+          <div class="layer-num">1</div>
+          <div class="layer-name">Assembly</div>
+          <pre class="code layer-code">mov eax, 3
+add eax, 4</pre>
+        </div>
+        <!-- Layer 0 (foundation) -->
+        <div class="layer-row" style="background:rgba(255,255,255,0.9); border-color:var(--ink); border-width:1.5px;">
+          <div class="layer-num">0</div>
+          <div class="layer-name">Gates</div>
+          <pre class="code layer-code">XOR(a,b) → sum
+AND(a,b) → carry</pre>
+        </div>
+        <!-- Ground line -->
+        <div class="flex items-center gap-3 pt-1 pl-1">
+          <div class="h-px flex-1" style="background:repeating-linear-gradient(90deg, var(--rule) 0 8px, transparent 8px 14px);"></div>
+          <span class="num-tag" style="font-size:10px;">foundation</span>
+        </div>
+      </div>
+    </div>
+  </section><section class="slide px-10 md:px-20 py-20 justify-center" data-stage="Closing">
+    <div class="max-w-5xl">
+      <div class="num-tag mb-6">The whole workshop in one slide</div>
+      <h2 class="h-display text-5xl md:text-6xl mb-10 leading-[1.05]">
+        Small PRs, feature flags,<br>
+        and parallel runs are<br>
+        <span class="italic accent">the same principle</span><br>
+        at three different scales.
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        <div class="card p-5">
+          <div class="num-tag mb-2">Scale: a line of code</div>
+          <div class="font-display text-2xl">Small PR</div>
+          <p class="text-xs muted mt-2">Make every change easy to read, review, and revert.</p>
+        </div>
+        <div class="card p-5">
+          <div class="num-tag mb-2">Scale: a feature</div>
+          <div class="font-display text-2xl">Feature flag</div>
+          <p class="text-xs muted mt-2">Ship code dark; release with a config flip; roll back the same way.</p>
+        </div>
+        <div class="card p-5">
+          <div class="num-tag mb-2">Scale: a system</div>
+          <div class="font-display text-2xl">Parallel run</div>
+          <p class="text-xs muted mt-2">Run new beside old; compare; shift traffic when you trust it.</p>
+        </div>
+      </div>
+
+      <div class="card p-8 bg-white/30">
+        <p class="h-display text-3xl md:text-4xl leading-tight">
+          Whether you&rsquo;re shipping a button color change<br>
+          or replacing a forty-year-old system,<br>
+          <span class="italic">the playbook is the same:</span><br>
+          <span class="accent">make change small. make it reversible.<br>run new alongside old until you trust it.</span>
+        </p>
+      </div>
+
+      <div class="mt-12 flex items-center gap-6 text-sm muted">
+        <span>Questions &middot; pairing &middot; office hours →</span>
+        <span class="kbd">←</span> <span>back to review</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Persistent UI -->
+<div class="stage above">
+  <span class="chip"><span id="stageLabel">Part 1 · Foundations</span></span>
+</div>
+<div class="slide-no above"><span id="slideNo">01</span> / <span id="slideTotal">00</span></div>
+<div class="footer-nav above">
+  <button class="btn btn-ghost" id="prevBtn" title="Previous (←)">←</button>
+  <button class="btn" id="nextBtn" title="Next (→)">Next →</button>
+</div>
+<div class="progress" id="progress" style="width:0%"></div>
+
+<script>
+  // ===== Deck navigation =====
+  const Deck = {
+    idx: 0,
+    slides: [],
+    init(){
+      this.slides = Array.from(document.querySelectorAll('.slide'));
+      document.getElementById('slideTotal').textContent = String(this.slides.length).padStart(2,'0');
+      document.getElementById('prevBtn').onclick = () => this.go(this.idx-1);
+      document.getElementById('nextBtn').onclick = () => this.go(this.idx+1);
+      document.addEventListener('keydown', e => {
+        if(e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+        if(e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); this.go(this.idx+1); }
+        else if(e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); this.go(this.idx-1); }
+        else if(e.key === 'Home') this.go(0);
+        else if(e.key === 'End') this.go(this.slides.length-1);
+      });
+      this.render();
+    },
+    go(i){
+      this.idx = Math.max(0, Math.min(this.slides.length-1, i));
+      this.render();
+    },
+    render(){
+      this.slides.forEach((s,i)=> s.classList.toggle('active', i===this.idx));
+      document.getElementById('slideNo').textContent = String(this.idx+1).padStart(2,'0');
+      document.getElementById('progress').style.width = ((this.idx+1)/this.slides.length*100)+'%';
+      const stage = this.slides[this.idx].dataset.stage || 'Part 1 · Foundations';
+      document.getElementById('stageLabel').textContent = stage;
+      window.scrollTo(0,0);
+    }
+  };
+  window.addEventListener('DOMContentLoaded', ()=> {
+    Deck.init();
+    Gates.init();
+    CircuitBuilders.init();
+    CommitGraph.init();
+    Conflict.init();
+    LgbTimer.init();
+  });
+
+  // ====================================================
+  // Truth-table gates
+  // ====================================================
+  const Gates = {
+    defs: {
+      AND: { name:'AND', op:(a,b)=> a&b, binary:true,  blurb:'1 only when both inputs are 1.' },
+      OR:  { name:'OR',  op:(a,b)=> a|b, binary:true,  blurb:'1 when at least one input is 1.' },
+      XOR: { name:'XOR', op:(a,b)=> a^b, binary:true,  blurb:'1 when inputs differ — the "different" gate.' },
+      NOT: { name:'NOT', op:(a)=> a?0:1, binary:false, blurb:'Flips its input.' },
+    },
+    state: {},
+    init(){
+      const containers = document.querySelectorAll('[data-gates]');
+      if(!containers.length) return;
+      containers.forEach(root => {
+        const want = root.dataset.gates.split(',').map(s=>s.trim());
+        want.forEach(name => {
+          const def = Gates.defs[name];
+          if(!def) return;
+          // Initialize state once per gate (shared across containers if same gate appears twice)
+          if(!Gates.state[def.name]) Gates.state[def.name] = { a:0, b:0 };
+          const div = document.createElement('div');
+          div.className = 'card p-5';
+          const rows = def.binary
+            ? [[0,0],[0,1],[1,0],[1,1]]
+            : [[0],[1]];
+          const head = def.binary ? '<th>A</th><th>B</th><th>Out</th>' : '<th>A</th><th>Out</th>';
+          div.innerHTML = `
+            <div class="flex items-baseline justify-between mb-3">
+              <div class="font-display text-3xl">${def.name}</div>
+              <div class="text-xs muted">click A / B</div>
+            </div>
+            <table class="tt mb-3"><thead><tr>${head}</tr></thead>
+              <tbody data-gate-table="${def.name}-${root.id}"></tbody></table>
+            <div class="text-xs ink-2">${def.blurb}</div>
+          `;
+          root.appendChild(div);
+          const tbody = div.querySelector('tbody');
+          rows.forEach((r,i)=>{
+            const out = def.binary ? def.op(r[0],r[1]) : def.op(r[0]);
+            const tr = document.createElement('tr');
+            tr.dataset.a = r[0];
+            tr.dataset.b = (r[1]!==undefined ? r[1] : '');
+            if(def.binary){
+              tr.innerHTML = `<td class="input" data-col="a">${r[0]}</td><td class="input" data-col="b">${r[1]}</td><td><strong>${out}</strong></td>`;
+            } else {
+              tr.innerHTML = `<td class="input" data-col="a">${r[0]}</td><td><strong>${out}</strong></td>`;
+            }
+            tbody.appendChild(tr);
+          });
+          tbody.addEventListener('click', e => {
+            const cell = e.target.closest('td.input');
+            if(!cell) return;
+            const col = cell.dataset.col;
+            const st = Gates.state[def.name];
+            st[col] = st[col] ? 0 : 1;
+            Gates.highlightAll(def.name);
+          });
+          Gates.highlightAll(def.name);
+        });
+      });
+    },
+    highlightAll(gateName){
+      const st = Gates.state[gateName];
+      const def = Gates.defs[gateName];
+      document.querySelectorAll(`tbody[data-gate-table^="${gateName}-"]`).forEach(tbody => {
+        Array.from(tbody.querySelectorAll('tr')).forEach(tr=>{
+          const a = parseInt(tr.dataset.a,10);
+          const b = tr.dataset.b === '' ? null : parseInt(tr.dataset.b,10);
+          const match = def.binary ? (a===st.a && b===st.b) : (a===st.a);
+          tr.classList.toggle('active', match);
+        });
+      });
+    }
+  };
+
+  // ====================================================
+  // Commit graph visualizer
+  // ====================================================
+  const CommitGraph = {
+    commits: [],  // {id, parents:[], lane, branch}
+    head: null,
+    branches: {}, // name -> commitId
+    branchLanes: {}, // name -> lane
+    laneCount: 1,
+    autoCounter: 0,
+    init(){
+      if(!document.getElementById('graphSvg')) return;
+      document.getElementById('gCommit').onclick = ()=> this.commit();
+      document.getElementById('gBranch').onclick = ()=> this.branch();
+      document.getElementById('gMerge').onclick = ()=> this.mergeIntoMain();
+      document.getElementById('gReset').onclick = ()=> this.reset();
+      this.reset();
+    },
+    reset(){
+      this.commits = [];
+      this.branches = { main: null };
+      this.branchLanes = { main: 0 };
+      this.laneCount = 1;
+      this.autoCounter = 0;
+      this.head = 'main';
+      // Seed with an initial commit on main
+      this._addCommit([], 'main');
+      this.render();
+    },
+    _id(){ return (++this.autoCounter).toString(16).padStart(2,'0') + (Math.random().toString(16).slice(2,4)); },
+    _addCommit(parents, branch){
+      const id = this._id();
+      const lane = this.branchLanes[branch];
+      this.commits.push({ id, parents, lane, branch });
+      this.branches[branch] = id;
+      return id;
+    },
+    commit(){
+      const branch = this.head;
+      const parent = this.branches[branch];
+      this._addCommit(parent ? [parent] : [], branch);
+      this.render();
+    },
+    branch(){
+      // Fork a new branch off current head
+      const parent = this.branches[this.head];
+      const existing = Object.keys(this.branches);
+      // pick a name
+      const taken = new Set(existing);
+      let name;
+      const candidates = ['feat/a','feat/b','feat/c','feat/d','fix/x','fix/y','feat/e'];
+      for(const c of candidates){ if(!taken.has(c)){ name = c; break; } }
+      if(!name) name = 'feat/'+(existing.length);
+      this.branchLanes[name] = this.laneCount++;
+      this.branches[name] = parent;
+      this.head = name;
+      // Add the first commit on this branch
+      this._addCommit(parent ? [parent] : [], name);
+      this.render();
+    },
+    mergeIntoMain(){
+      if(this.head === 'main') return;
+      const source = this.branches[this.head];
+      const target = this.branches['main'];
+      // Create a merge commit on main with two parents
+      const id = this._id();
+      this.commits.push({ id, parents:[target, source].filter(Boolean), lane: this.branchLanes['main'], branch:'main', merge:true });
+      this.branches['main'] = id;
+      this.head = 'main';
+      this.render();
+    },
+    render(){
+      const svg = document.getElementById('graphSvg');
+      const width = 900;
+      const height = 280;
+      const stepX = 70;
+      const laneY = lane => 50 + lane*60;
+      const radius = 13;
+      let html = '';
+      // Map commit id -> x position by order
+      const order = {};
+      this.commits.forEach((c,i)=> order[c.id] = i);
+      const xOf = c => 60 + order[c.id]*stepX;
+      const yOf = c => laneY(c.lane);
+
+      // Draw edges first
+      this.commits.forEach(c => {
+        c.parents.forEach(pid => {
+          const p = this.commits.find(x=>x.id===pid);
+          if(!p) return;
+          const x1 = xOf(p), y1 = yOf(p);
+          const x2 = xOf(c), y2 = yOf(c);
+          const isMain = (c.branch==='main' && p.branch==='main') ? 'main' : (c.branch==='main' ? 'merge' : c.branch);
+          const cls = c.branch==='main' && !c.merge ? '' : (c.branch.startsWith('fix') ? 'fix' : 'feat');
+          // smooth curve via quadratic
+          const mx = (x1+x2)/2;
+          html += `<path d="M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}" class="branch-line ${cls}"/>`;
+        });
+      });
+
+      // Draw nodes
+      this.commits.forEach(c => {
+        const x = xOf(c), y = yOf(c);
+        const fillCls = c.branch==='main' ? 'commit-fill-main' : (c.branch.startsWith('fix') ? 'commit-fill-fix' : 'commit-fill-feat');
+        const r = c.merge ? radius+2 : radius;
+        html += `<circle cx="${x}" cy="${y}" r="${r}" class="commit ${fillCls}"/>`;
+        if(c.merge){
+          html += `<text x="${x}" y="${y+4}" text-anchor="middle" class="commit-label" style="font-weight:700; fill:var(--ink);">⌬</text>`;
+        }
+        html += `<text x="${x}" y="${y+r+14}" text-anchor="middle" class="commit-label">${c.id}</text>`;
+      });
+
+      // Draw branch labels at HEAD
+      Object.entries(this.branches).forEach(([name, id])=>{
+        if(!id) return;
+        const c = this.commits.find(x=>x.id===id);
+        if(!c) return;
+        const x = xOf(c), y = yOf(c);
+        const isHead = (name===this.head);
+        const color = name==='main' ? 'var(--ink)' : (name.startsWith('fix') ? 'var(--accent-2)' : 'var(--accent)');
+        html += `<rect x="${x-22}" y="${y-radius-26}" width="${name.length*7.2+12}" height="18" rx="9" fill="rgba(255,255,255,0.85)" stroke="${color}" stroke-width="${isHead?2:1}"/>`;
+        html += `<text x="${x-22+6}" y="${y-radius-13}" class="commit-label" style="font-family:'JetBrains Mono',monospace; font-size:11px; fill:${color}; font-weight:${isHead?700:500}">${name}</text>`;
+      });
+      svg.innerHTML = html;
+      document.getElementById('gCurrent').textContent = this.head;
+    }
+  };
+
+  // ====================================================
+  // Merge conflict simulator
+  // ====================================================
+  // ====================================================
+  // Merge-conflict simulator
+  // Drives an interactive Git graph as the centerpiece.
+  // Steps walk through: base commit on main → branch A
+  // appears → branch B appears → A edits → B edits →
+  // attempt merge (conflict surfaces). Editors are read-only;
+  // their values are seeded by the current step.
+  // ====================================================
+  const Conflict = {
+    step: 0,
+
+    // The file as it appears at each stage. Two-line shared base, then divergent edits.
+    fileBase: `# file.py\n\ndef get_price(item):\n    base = item.cost\n    tax = base * 0.08\n    return base + tax`,
+
+    fileA: `# file.py\n\ndef get_price(item):\n    base = item.cost\n    tax = base * 0.085          # updated rate\n    fee = 1.50                  # platform fee\n    return base + tax + fee`,
+
+    fileB: `# file.py\n\ndef get_price(item):\n    base = item.cost\n    tax = base * 0.08\n    discount = 5 if item.on_sale else 0\n    return base + tax - discount`,
+
+    // Step labels (status text under the buttons)
+    labels: [
+      'Start: a single commit on <span class="font-mono">main</span>. Both editors show the same file.',
+      'Developer A creates branch <span class="font-mono" style="color:var(--accent);">feat/pricing</span> from main.',
+      'Developer B creates branch <span class="font-mono" style="color:var(--accent-2);">feat/copy</span> from main.',
+      'Developer A edits the file on her branch and commits.',
+      'Developer B edits the same lines on his branch and commits.',
+      'Developer A tries to merge into main. Git surfaces the <strong>CONFLICT</strong>.',
+      'Pick a resolution below, or edit the merged file directly.'
+    ],
+
+    init(){
+      if(!document.getElementById('conflictGraph')) return;
+      document.getElementById('cfStep').addEventListener('click', ()=> this.advance());
+      document.getElementById('cfReset').addEventListener('click', ()=> this.reset());
+      document.getElementById('keepA').addEventListener('click', ()=> this.resolveWith('a'));
+      document.getElementById('keepB').addEventListener('click', ()=> this.resolveWith('b'));
+      document.getElementById('resolveManual').addEventListener('click', ()=>{
+        document.getElementById('editorM').focus();
+        document.getElementById('mergeStatus').innerHTML = 'Edit the merged file, remove the markers, then commit.';
+      });
+
+      // Make editors read-only for this guided walkthrough
+      document.getElementById('editorA').readOnly = true;
+      document.getElementById('editorB').readOnly = true;
+
+      this.reset();
+    },
+
+    advance(){
+      if(this.step < this.labels.length - 1){
+        this.step++;
+        this.render();
+      }
+    },
+
+    reset(){
+      this.step = 0;
+      const mergeBox = document.getElementById('mergeBox');
+      if(mergeBox) mergeBox.classList.add('hidden');
+      ['keepA','keepB','resolveManual'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.classList.add('hidden');
+      });
+      const status = document.getElementById('mergeStatus');
+      if(status) status.innerHTML = '';
+      this.render();
+    },
+
+    render(){
+      // Update step label
+      document.getElementById('cfStepLabel').innerHTML = this.labels[this.step];
+
+      // Set editor contents according to step
+      const a = document.getElementById('editorA');
+      const b = document.getElementById('editorB');
+      if(this.step >= 3) a.value = this.fileA;
+      else                a.value = this.fileBase;
+      if(this.step >= 4) b.value = this.fileB;
+      else                b.value = this.fileBase;
+
+      // Update the Next button label
+      const stepBtn = document.getElementById('cfStep');
+      if(this.step >= this.labels.length - 1) {
+        stepBtn.disabled = true;
+        stepBtn.textContent = '✓ Done';
+        stepBtn.classList.remove('btn-accent');
+        stepBtn.classList.add('btn-ghost');
+      } else {
+        stepBtn.disabled = false;
+        stepBtn.textContent = '▶ Next step';
+        stepBtn.classList.add('btn-accent');
+        stepBtn.classList.remove('btn-ghost');
+      }
+
+      // Show merge result box at step 5 (conflict) and onward
+      if(this.step >= 5){
+        const box = document.getElementById('mergeBox');
+        const m = document.getElementById('editorM');
+        const status = document.getElementById('mergeStatus');
+        box.classList.remove('hidden');
+        m.value =
+`# file.py
+
+def get_price(item):
+    base = item.cost
+<<<<<<< HEAD (feat/pricing — Developer A's changes)
+    tax = base * 0.085          # updated rate
+    fee = 1.50                  # platform fee
+    return base + tax + fee
+=======
+    tax = base * 0.08
+    discount = 5 if item.on_sale else 0
+    return base + tax - discount
+>>>>>>> feat/copy (Developer B's changes)`;
+        status.innerHTML = '<span class="cross">⚠</span> CONFLICT &mdash; Git wrote both versions into the file with markers. Choose a resolution.';
+        document.getElementById('keepA').classList.remove('hidden');
+        document.getElementById('keepB').classList.remove('hidden');
+        document.getElementById('resolveManual').classList.remove('hidden');
+      }
+
+      this.renderGraph();
+    },
+
+    renderGraph(){
+      const svg = document.getElementById('conflictGraph');
+      const W = 900, H = 200;
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+      // Layout: main is the middle horizontal line. A branch goes above, B below.
+      const mainY = 100;
+      const topY  = 40;
+      const botY  = 160;
+
+      // X positions for the commits on main and on the branches.
+      // Commit c0 (initial) at x=120. Branch points & subsequent commits depend on step.
+      const x0  = 120;       // initial commit on main
+      const xBranch = 240;   // where branches diverge
+      const xCommitA = 410;  // A's commit
+      const xCommitB = 410;  // B's commit (same x for symmetry)
+      const xMerge  = 600;   // merge attempt point on main
+
+      let html = '';
+
+      // ---- main line ----
+      // From initial commit (x0) we always have main. After branches, main extends to xBranch.
+      // After step 5 (merge attempt) we draw a tentative merge node and a question mark.
+      const mainLineEndX = this.step >= 5 ? xMerge : (this.step >= 1 ? xBranch + 40 : x0 + 60);
+      html += `<line x1="${x0}" y1="${mainY}" x2="${mainLineEndX}" y2="${mainY}" stroke="var(--ink)" stroke-width="2"/>`;
+
+      // ---- branch A (top) ----
+      if(this.step >= 1){
+        // Branch line goes from (xBranch, mainY) → (xCommitA, topY)
+        const xEndA = this.step >= 3 ? xCommitA + 30 : xCommitA - 60;
+        html += `<path d="M ${xBranch} ${mainY} C ${xBranch+40} ${mainY}, ${xBranch+60} ${topY}, ${xCommitA-60} ${topY} L ${xEndA} ${topY}" fill="none" stroke="var(--accent)" stroke-width="2"/>`;
+        // Branch label
+        html += `<text x="${xBranch+8}" y="${topY-12}" class="commit-label" style="font-size:11px; fill:var(--accent); font-weight:600;">feat/pricing  ·  Developer A</text>`;
+      }
+
+      // ---- branch B (bottom) ----
+      if(this.step >= 2){
+        const xEndB = this.step >= 4 ? xCommitB + 30 : xCommitB - 60;
+        html += `<path d="M ${xBranch} ${mainY} C ${xBranch+40} ${mainY}, ${xBranch+60} ${botY}, ${xCommitB-60} ${botY} L ${xEndB} ${botY}" fill="none" stroke="var(--accent-2)" stroke-width="2"/>`;
+        html += `<text x="${xBranch+8}" y="${botY+22}" class="commit-label" style="font-size:11px; fill:var(--accent-2); font-weight:600;">feat/copy  ·  Developer B</text>`;
+      }
+
+      // ---- merge attempt: dashed lines from both branch tips to merge node ----
+      if(this.step >= 5){
+        html += `<path d="M ${xCommitA+10} ${topY} C ${xMerge-40} ${topY}, ${xMerge-40} ${mainY}, ${xMerge} ${mainY}" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="5 4"/>`;
+        html += `<path d="M ${xCommitB+10} ${botY} C ${xMerge-40} ${botY}, ${xMerge-40} ${mainY}, ${xMerge} ${mainY}" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-dasharray="5 4"/>`;
+      }
+
+      // ---- commits (drawn on top of lines) ----
+      // c0 on main
+      html += this.commitNode(x0, mainY, '#fff8ef', 'var(--ink)', 'c0');
+      html += `<text x="${x0}" y="${mainY+28}" text-anchor="middle" class="commit-label">main</text>`;
+
+      // Branch-point commit on main (same as c0 — branches diverge from c0). But add a label
+      if(this.step >= 1){
+        html += `<text x="${xBranch}" y="${mainY-12}" text-anchor="middle" class="commit-label" style="font-size:10px; fill:var(--muted);">branch from here</text>`;
+        html += `<circle cx="${xBranch}" cy="${mainY}" r="3" fill="var(--ink-2)"/>`;
+      }
+
+      // A's commit
+      if(this.step >= 3){
+        html += this.commitNode(xCommitA, topY, 'var(--accent)', 'var(--accent)', 'cA', true);
+        html += `<text x="${xCommitA}" y="${topY-18}" text-anchor="middle" class="commit-label" style="font-size:10px;">A&rsquo;s edit</text>`;
+      }
+      // B's commit
+      if(this.step >= 4){
+        html += this.commitNode(xCommitB, botY, 'var(--accent-2)', 'var(--accent-2)', 'cB', true);
+        html += `<text x="${xCommitB}" y="${botY+34}" text-anchor="middle" class="commit-label" style="font-size:10px;">B&rsquo;s edit</text>`;
+      }
+
+      // Merge attempt node (a question mark)
+      if(this.step >= 5){
+        html += `<circle cx="${xMerge}" cy="${mainY}" r="18" fill="rgba(168,116,26,0.18)" stroke="var(--warn)" stroke-width="2" stroke-dasharray="3 3"/>`;
+        html += `<text x="${xMerge}" y="${mainY+5}" text-anchor="middle" class="commit-label" style="font-size:18px; font-weight:700; fill:var(--warn);">?</text>`;
+        html += `<text x="${xMerge}" y="${mainY+40}" text-anchor="middle" class="commit-label" style="font-size:11px; fill:var(--warn); font-weight:600;">merge — but how?</text>`;
+      }
+
+      svg.innerHTML = html;
+    },
+
+    commitNode(x, y, fill, stroke, id, filled){
+      const fillVal = filled ? fill : '#fff8ef';
+      return `<circle cx="${x}" cy="${y}" r="13" fill="${fillVal}" stroke="${stroke}" stroke-width="2"/>`;
+    },
+
+    resolveWith(which){
+      // Replace the merged file with just one side's version (no conflict markers)
+      const src = which === 'a' ? this.fileA : this.fileB;
+      const m = document.getElementById('editorM');
+      m.value = src;
+      m.classList.add('pulse-ok');
+      setTimeout(()=> m.classList.remove('pulse-ok'), 600);
+      const dev = which === 'a' ? 'A' : 'B';
+      document.getElementById('mergeStatus').innerHTML = `<span class="tick">✓</span> Resolved &mdash; kept Developer ${dev}&rsquo;s version. Now commit the merge.`;
+    }
+  };
+
+  // ====================================================
+  // Circuit Builder (drag-and-drop)
+  // Generic class — instantiated twice: once for the adder
+  // (Sum + Carry outputs) and once for the XOR exercise
+  // (single output). Each instance owns its own canvas,
+  // gates, connections, and DOM ids.
+  // ====================================================
+  class CircuitBuilder {
+    constructor(cfg){
+      // cfg: {
+      //   canvasId, wiresId, paletteSelector, testBtnId, clearBtnId, hintBtnId, resultId,
+      //   outputs: [{ key, label, x, y }],      // x is offset-from-right ('R-18') or absolute ('20')
+      //   testCases: [{ A, B, expected: { Sum:0, Carry:1 } }],
+      //   hintText, successText, maxGates
+      // }
+      this.cfg = cfg;
+      this.canvas = null;
+      this.wires = null;
+      this.gates = [];
+      this.inputs = {};       // populated below: A, B
+      this.outputs = {};      // populated from cfg.outputs
+      this.connections = [];
+      this.selectedPort = null;
+      this.nextId = 1;
+      this.showHint = false;
+      // Unique prefix so DOM ids don't collide between instances
+      this.ns = cfg.canvasId + '-';
+    }
+
+    init(){
+      this.canvas = document.getElementById(this.cfg.canvasId);
+      if(!this.canvas) return;
+      this.wires = document.getElementById(this.cfg.wiresId);
+      this.layoutFixedNodes();
+      this.bindPalette();
+      this.bindCanvas();
+      this.buildTruthTable();
+      const test = document.getElementById(this.cfg.testBtnId);
+      const clear = document.getElementById(this.cfg.clearBtnId);
+      const hint = document.getElementById(this.cfg.hintBtnId);
+      if(test)  test.onclick  = ()=> this.runTests();
+      if(clear) clear.onclick = ()=> this.clear();
+      if(hint)  hint.onclick  = ()=> this.toggleHint();
+      this.redraw();
+      this.renderTruthTable();
+    }
+
+    _id(name){ return this.ns + name; }
+
+    layoutFixedNodes(){
+      const cw = this.canvas.clientWidth || 800;
+      // Inputs A, B on the left
+      this.inputs.A = { val:0 };
+      this.inputs.B = { val:0 };
+      this.canvas.insertAdjacentHTML('beforeend', `
+        <div class="io-node" id="${this._id('in-A')}" style="left:18px; top:60px;">
+          <div class="body" data-input="A">0</div>
+          <div class="lbl">A</div>
+          <div class="port out" data-node="${this._id('in-A')}" data-port="out"></div>
+        </div>`);
+
+      // For single-output configurations, put B closer to A vertically; for two-output, spread out
+      const bTop = this.cfg.outputs.length === 1 ? 220 : 300;
+      this.canvas.insertAdjacentHTML('beforeend', `
+        <div class="io-node" id="${this._id('in-B')}" style="left:18px; top:${bTop}px;">
+          <div class="body" data-input="B">0</div>
+          <div class="lbl">B</div>
+          <div class="port out" data-node="${this._id('in-B')}" data-port="out"></div>
+        </div>`);
+
+      // Outputs on the right
+      this.cfg.outputs.forEach(o => {
+        this.outputs[o.key] = { target: null };
+        const id = this._id('out-' + o.key);
+        this.canvas.insertAdjacentHTML('beforeend', `
+          <div class="io-node out" style="right:18px; top:${o.y}px;" id="${id}">
+            <div class="body" id="${this._id('body-' + o.key)}">?</div>
+            <div class="lbl">${o.label}</div>
+            <div class="port in-only" data-node="${id}" data-port="in"></div>
+          </div>`);
+      });
+
+      // Input click toggles
+      this.canvas.querySelectorAll('[data-input]').forEach(el => {
+        el.addEventListener('click', () => {
+          const k = el.dataset.input;
+          this.inputs[k].val = this.inputs[k].val ? 0 : 1;
+          el.textContent = this.inputs[k].val;
+          el.classList.toggle('on', !!this.inputs[k].val);
+          this.evaluate();
+        });
+      });
+
+      // Bind I/O ports
+      this.canvas.querySelectorAll('.port').forEach(p => this.bindPort(p));
+    }
+
+    bindPalette(){
+      // Only chips in our palette (scoped via selector) feed this canvas
+      document.querySelectorAll(this.cfg.paletteSelector).forEach(chip => {
+        chip.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/plain', chip.dataset.type);
+          // Also stamp this canvas's id so other canvases ignore the drop
+          e.dataTransfer.setData('application/x-canvas', this.cfg.canvasId);
+          e.dataTransfer.effectAllowed = 'copy';
+        });
+      });
+    }
+
+    bindCanvas(){
+      this.canvas.addEventListener('dragover', e => {
+        e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+      });
+      this.canvas.addEventListener('drop', e => {
+        e.preventDefault();
+        // Reject drops not from this canvas's palette
+        const fromCanvas = e.dataTransfer.getData('application/x-canvas');
+        if(fromCanvas && fromCanvas !== this.cfg.canvasId) return;
+        const type = e.dataTransfer.getData('text/plain');
+        if(!type) return;
+        const max = this.cfg.maxGates || 6;
+        if(this.gates.length >= max){
+          this.toast(`Max ${max} gates. Try a simpler solution.`);
+          return;
+        }
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left - 44;
+        const y = e.clientY - rect.top - 25;
+        this.addGate(type, x, y);
+      });
+      this.canvas.addEventListener('click', e => {
+        if(!e.target.classList.contains('port')){
+          if(this.selectedPort){
+            this.selectedPort.classList.remove('active');
+            this.selectedPort = null;
+          }
+        }
+      });
+    }
+
+    addGate(type, x, y){
+      const id = this._id('g' + (this.nextId++));
+      const isUnary = (type === 'NOT');
+      x = Math.max(20, Math.min(x, this.canvas.clientWidth - 110));
+      y = Math.max(20, Math.min(y, this.canvas.clientHeight - 80));
+      const el = document.createElement('div');
+      el.className = 'gate-node';
+      el.id = id;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.innerHTML = `
+        <button class="del" title="delete">×</button>
+        <div class="body ${type.toLowerCase()}">${type}</div>
+        ${isUnary
+          ? `<div class="port in-only" data-node="${id}" data-port="in"></div>`
+          : `<div class="port in-a" data-node="${id}" data-port="a"></div>
+             <div class="port in-b" data-node="${id}" data-port="b"></div>`
+        }
+        <div class="port out" data-node="${id}" data-port="out"></div>
+      `;
+      this.canvas.appendChild(el);
+      this.gates.push({ id, type, el });
+      this.bindGate(el);
+      this.evaluate();
+    }
+
+    bindGate(el){
+      const body = el.querySelector('.body');
+      let dragging = false, ox=0, oy=0;
+      body.addEventListener('mousedown', e => {
+        if(e.target.classList.contains('port')) return;
+        dragging = true;
+        const rect = el.getBoundingClientRect();
+        ox = e.clientX - rect.left;
+        oy = e.clientY - rect.top;
+        el.classList.add('dragging');
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', e => {
+        if(!dragging) return;
+        const cr = this.canvas.getBoundingClientRect();
+        const nx = Math.max(0, Math.min(e.clientX - cr.left - ox, this.canvas.clientWidth - el.offsetWidth));
+        const ny = Math.max(0, Math.min(e.clientY - cr.top - oy, this.canvas.clientHeight - el.offsetHeight));
+        el.style.left = nx + 'px';
+        el.style.top = ny + 'px';
+        this.redrawWires();
+      });
+      document.addEventListener('mouseup', () => {
+        if(dragging){ dragging = false; el.classList.remove('dragging'); }
+      });
+      el.querySelector('.del').addEventListener('click', e => {
+        e.stopPropagation();
+        const id = el.id;
+        this.connections = this.connections.filter(c => c.fromNode !== id && c.toNode !== id);
+        this.gates = this.gates.filter(g => g.id !== id);
+        Object.values(this.outputs).forEach(o => { if(o.target === id) o.target = null; });
+        el.remove();
+        this.evaluate();
+      });
+      el.querySelectorAll('.port').forEach(p => this.bindPort(p));
+    }
+
+    bindPort(p){
+      if(p.dataset.bound) return;
+      p.dataset.bound = '1';
+      p.addEventListener('click', e => {
+        e.stopPropagation();
+        this.handlePortClick(p);
+      });
+    }
+
+    handlePortClick(p){
+      const isOutput = p.dataset.port === 'out';
+      if(!this.selectedPort){
+        if(!isOutput){
+          this.toast('Start at an output port (right side of a node).');
+          return;
+        }
+        this.selectedPort = p;
+        p.classList.add('active');
+        return;
+      }
+      if(isOutput){
+        this.selectedPort.classList.remove('active');
+        this.selectedPort = p;
+        p.classList.add('active');
+        return;
+      }
+      const fromNode = this.selectedPort.dataset.node;
+      const toNode   = p.dataset.node;
+      const toPort   = p.dataset.port;
+      if(fromNode === toNode){
+        this.toast('Can\'t connect a gate to itself.');
+        this.selectedPort.classList.remove('active'); this.selectedPort = null;
+        return;
+      }
+      this.connections = this.connections.filter(c => !(c.toNode === toNode && c.toPort === toPort));
+      // If target is an output node, set its target
+      // Output node ids look like: <ns>out-<key>
+      const outPrefix = this._id('out-');
+      if(toNode.startsWith(outPrefix)){
+        const key = toNode.slice(outPrefix.length);
+        if(this.outputs[key]) this.outputs[key].target = fromNode;
+      }
+      this.connections.push({ fromNode, toNode, toPort });
+      this.selectedPort.classList.remove('active'); this.selectedPort = null;
+      this.evaluate();
+    }
+
+    toast(msg){
+      const r = document.getElementById(this.cfg.resultId);
+      if(r) r.innerHTML = `<span class="muted">${msg}</span>`;
+    }
+
+    clear(){
+      this.gates.forEach(g => g.el.remove());
+      this.gates = [];
+      this.connections = [];
+      Object.values(this.outputs).forEach(o => o.target = null);
+      this.selectedPort = null;
+      this.evaluate();
+      const r = document.getElementById(this.cfg.resultId);
+      if(r) r.innerHTML = '<span class="muted">Cleared. Drag gates back to start.</span>';
+    }
+
+    toggleHint(){
+      this.showHint = !this.showHint;
+      const r = document.getElementById(this.cfg.resultId);
+      if(!r) return;
+      if(this.showHint){
+        r.innerHTML = `<div class="text-sm ink-2">${this.cfg.hintText}</div>`;
+      } else {
+        r.innerHTML = '<span class="muted">Hint hidden. Keep going.</span>';
+      }
+    }
+
+    evalGate(gateId, inputs){
+      const g = this.gates.find(x => x.id === gateId);
+      if(!g) return null;
+      const feeds = this.connections.filter(c => c.toNode === gateId);
+      const inputVal = port => {
+        const c = feeds.find(c => c.toPort === port);
+        if(!c) return null;
+        return this.valueOfSource(c.fromNode, inputs);
+      };
+      if(g.type === 'NOT'){
+        const v = inputVal('in');
+        if(v === null) return null;
+        return v ? 0 : 1;
+      }
+      const a = inputVal('a'); const b = inputVal('b');
+      if(a === null || b === null) return null;
+      if(g.type === 'AND') return a & b;
+      if(g.type === 'OR')  return a | b;
+      if(g.type === 'XOR') return a ^ b;
+      return null;
+    }
+
+    valueOfSource(nodeId, inputs){
+      if(nodeId === this._id('in-A')) return inputs.A;
+      if(nodeId === this._id('in-B')) return inputs.B;
+      return this.evalGate(nodeId, inputs);
+    }
+
+    evaluateWith(inputs){
+      const result = {};
+      Object.keys(this.outputs).forEach(k => {
+        const t = this.outputs[k].target;
+        result[k] = t ? this.valueOfSource(t, inputs) : null;
+      });
+      return result;
+    }
+
+    evaluate(){
+      const r = this.evaluateWith({ A: this.inputs.A.val, B: this.inputs.B.val });
+      Object.keys(this.outputs).forEach(k => {
+        const body = document.getElementById(this._id('body-' + k));
+        if(!body) return;
+        const v = r[k];
+        body.textContent = v === null ? '?' : v;
+        body.classList.toggle('on', v === 1);
+        body.classList.remove('wrong');
+      });
+      this.redrawWires();
+      this.renderTruthTable();
+    }
+
+    // Build the static structure of the live truth table (rows for each test case)
+    buildTruthTable(){
+      // Build both Target and Yours tables (split panels)
+      const targetId = this.cfg.targetTableId;
+      const yoursId  = this.cfg.yoursTableId;
+      const targetTbody = targetId ? document.querySelector(`#${targetId} tbody`) : null;
+      const yoursTbody  = yoursId  ? document.querySelector(`#${yoursId} tbody`)  : null;
+      if(!targetTbody && !yoursTbody) return;
+      const outKeys = Object.keys(this.outputs);
+      if(targetTbody) targetTbody.innerHTML = '';
+      if(yoursTbody)  yoursTbody.innerHTML  = '';
+      this.cfg.testCases.forEach((tc, i) => {
+        if(targetTbody){
+          const tr = document.createElement('tr');
+          tr.dataset.tcIndex = i;
+          tr.innerHTML = `<td>${tc.A}</td><td>${tc.B}</td>` +
+            outKeys.map(k => `<td>${tc.expected[k]}</td>`).join('');
+          targetTbody.appendChild(tr);
+        }
+        if(yoursTbody){
+          const tr = document.createElement('tr');
+          tr.dataset.tcIndex = i;
+          tr.innerHTML = `<td class="input-cell">${tc.A}</td><td class="input-cell">${tc.B}</td>` +
+            outKeys.map(k => `<td class="yours-cell unset" data-yours="${k}">?</td>`).join('');
+          yoursTbody.appendChild(tr);
+        }
+      });
+    }
+
+    // Update the Yours table — match/mismatch coloring against target
+    renderTruthTable(){
+      const yoursId = this.cfg.yoursTableId;
+      if(!yoursId) return;
+      const tbody = document.querySelector(`#${yoursId} tbody`);
+      if(!tbody) return;
+      const outKeys = Object.keys(this.outputs);
+      this.cfg.testCases.forEach((tc, i) => {
+        const got = this.evaluateWith({ A: tc.A, B: tc.B });
+        const tr = tbody.querySelector(`tr[data-tc-index="${i}"]`);
+        if(!tr) return;
+        outKeys.forEach(k => {
+          const td = tr.querySelector(`td[data-yours="${k}"]`);
+          if(!td) return;
+          const v = got[k];
+          td.classList.remove('match','mismatch','unset');
+          if(v === null || v === undefined){
+            td.textContent = '?';
+            td.classList.add('unset');
+          } else {
+            td.textContent = v;
+            td.classList.add(v === tc.expected[k] ? 'match' : 'mismatch');
+          }
+        });
+      });
+    }
+
+    redraw(){ this.redrawWires(); }
+
+    redrawWires(){
+      if(!this.wires) return;
+      const w = this.canvas.clientWidth;
+      const h = this.canvas.clientHeight;
+      this.wires.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      let svg = '';
+      const portCenter = (nodeId, portName) => {
+        const node = document.getElementById(nodeId);
+        if(!node) return null;
+        const sel = portName === 'out' ? '.port.out' : (portName === 'a' ? '.port.in-a' : (portName === 'b' ? '.port.in-b' : '.port.in-only'));
+        const p = node.querySelector(sel);
+        if(!p) return null;
+        const pr = p.getBoundingClientRect();
+        const cr = this.canvas.getBoundingClientRect();
+        return { x: pr.left + pr.width/2 - cr.left, y: pr.top + pr.height/2 - cr.top };
+      };
+      this.connections.forEach(c => {
+        const from = portCenter(c.fromNode, 'out');
+        const to   = portCenter(c.toNode,   c.toPort);
+        if(!from || !to) return;
+        const dx = Math.max(40, (to.x - from.x) * 0.4);
+        const d = `M ${from.x} ${from.y} C ${from.x+dx} ${from.y}, ${to.x-dx} ${to.y}, ${to.x} ${to.y}`;
+        svg += `<path d="${d}" stroke="var(--ink-2)" stroke-width="2" fill="none"/>`;
+      });
+      this.wires.innerHTML = svg;
+    }
+
+    runTests(){
+      let passAll = true;
+      let html = '<div class="flex flex-col gap-1.5">';
+      const outKeys = Object.keys(this.outputs);
+      this.cfg.testCases.forEach(tc => {
+        const got = this.evaluateWith({ A: tc.A, B: tc.B });
+        const ok = outKeys.every(k => got[k] === tc.expected[k]);
+        if(!ok) passAll = false;
+        const gotStr = outKeys.map(k => `${k[0]}=${got[k] ?? '?'}`).join(' ');
+        const expStr = outKeys.map(k => `${k[0]}=${tc.expected[k]}`).join(' ');
+        html += `<div class="test-case-row ${ok?'pass':'fail'}">
+          <span>${ok?'✓':'✗'}</span>
+          <span>A=${tc.A} B=${tc.B}</span>
+          <span class="muted">→</span>
+          <span>${gotStr}</span>
+          <span class="muted">(expected ${expStr})</span>
+        </div>`;
+      });
+      html += '</div>';
+      if(passAll){
+        html = `<div class="text-sm" style="color:var(--ok)"><strong>✓ ${this.cfg.successText}</strong></div>` + html;
+        this.canvas.classList.add('canvas-success');
+        setTimeout(()=> this.canvas.classList.remove('canvas-success'), 700);
+      } else {
+        html = `<div class="text-sm" style="color:var(--accent)"><strong>Not quite.</strong> Look at which cases failed — what pattern of A,B is wrong?</div>` + html;
+      }
+      const r = document.getElementById(this.cfg.resultId);
+      if(r) r.innerHTML = html;
+    }
+  }
+
+  // Two instances:
+  const adderBuilder = new CircuitBuilder({
+    canvasId: 'circCanvas',
+    wiresId:  'circWires',
+    paletteSelector: '.gate-chip:not([data-builder])',
+    testBtnId:  'circTest',
+    clearBtnId: 'circClear',
+    hintBtnId:  'circHint',
+    resultId:   'circResult',
+    truthTableId: 'circTruth', // legacy, kept for safety
+    targetTableId: 'circTarget',
+    yoursTableId:  'circYours',
+    outputs: [
+      { key:'Sum',   label:'Sum',   y:60  },
+      { key:'Carry', label:'Carry', y:300 }
+    ],
+    testCases: [
+      { A:0, B:0, expected:{ Sum:0, Carry:0 } },
+      { A:0, B:1, expected:{ Sum:1, Carry:0 } },
+      { A:1, B:0, expected:{ Sum:1, Carry:0 } },
+      { A:1, B:1, expected:{ Sum:0, Carry:1 } }
+    ],
+    hintText: `<strong>Hint.</strong> Start with <strong>Carry</strong> — it's one of the gates you already have. When is the carry bit 1? Only when <em>both</em> A and B are 1. So Carry = <span class="font-mono">A AND B</span>. <br><span class="muted">Sum is the genuinely interesting one. Sit with it — the next two slides will turn that struggle into something useful.</span>`,
+    successText: 'All 4 cases pass. You built an adder out of basic gates.',
+    maxGates: 6
+  });
+
+  // Second adder builder — same problem, but XOR is now in the palette.
+  // Used on the "take 2" exercise slide.
+  const adder2Builder = new CircuitBuilder({
+    canvasId: 'circ2Canvas',
+    wiresId:  'circ2Wires',
+    paletteSelector: '.gate-chip[data-builder="xor2"]',
+    testBtnId:  'circ2Test',
+    clearBtnId: 'circ2Clear',
+    hintBtnId:  'circ2Hint',
+    resultId:   'circ2Result',
+    truthTableId: 'circ2Truth', // legacy, kept for safety
+    targetTableId: 'circ2Target',
+    yoursTableId:  'circ2Yours',
+    outputs: [
+      { key:'Sum',   label:'Sum',   y:60  },
+      { key:'Carry', label:'Carry', y:300 }
+    ],
+    testCases: [
+      { A:0, B:0, expected:{ Sum:0, Carry:0 } },
+      { A:0, B:1, expected:{ Sum:1, Carry:0 } },
+      { A:1, B:0, expected:{ Sum:1, Carry:0 } },
+      { A:1, B:1, expected:{ Sum:0, Carry:1 } }
+    ],
+    hintText: `<strong>Hint.</strong> Carry stays as it was: <span class="font-mono">A AND B</span>. For Sum, XOR is now in your palette. Try the simplest possible thing — just <span class="font-mono">A XOR B</span>. That&rsquo;s the whole sum.`,
+    successText: 'Two gates. That&rsquo;s the cleanest adder you can build.',
+    maxGates: 4
+  });
+
+  // XOR-from-basics builder — bonus exercise: build XOR using only AND/OR/NOT
+  const xorBuilder = new CircuitBuilder({
+    canvasId: 'xorCanvas',
+    wiresId:  'xorWires',
+    paletteSelector: '.gate-chip[data-builder="xor"]',
+    testBtnId:  'xorTest',
+    clearBtnId: 'xorClear',
+    hintBtnId:  'xorHint',
+    resultId:   'xorResult',
+    targetTableId: 'xorTarget',
+    yoursTableId:  'xorYours',
+    outputs: [
+      { key:'Out', label:'Out', y:160 }
+    ],
+    testCases: [
+      { A:0, B:0, expected:{ Out:0 } },
+      { A:0, B:1, expected:{ Out:1 } },
+      { A:1, B:0, expected:{ Out:1 } },
+      { A:1, B:1, expected:{ Out:0 } }
+    ],
+    hintText: `<strong>Hint.</strong> Say it in English: <em>&ldquo;at least one is on, but not both.&rdquo;</em> Translate word-for-word. &ldquo;At least one is on&rdquo; → <span class="font-mono">A OR B</span>. &ldquo;Both&rdquo; → <span class="font-mono">A AND B</span>. &ldquo;Not both&rdquo; → <span class="font-mono">NOT (A AND B)</span>. Combine the two with AND.`,
+    successText: 'You built XOR from AND, OR, NOT.',
+    maxGates: 4
+  });
+
+  // Expose for DOMContentLoaded init pattern
+  const CircuitBuilders = {
+    init(){
+      adderBuilder.init();
+      adder2Builder.init();
+      xorBuilder.init();
+    }
+  };
+
+  // ====================================================
+  // LearnGitBranching countdown timer
+  // ====================================================
+  const LgbTimer = {
+    secs: 15*60,
+    initial: 15*60,
+    running: false,
+    timerId: null,
+    init(){
+      const t = document.getElementById('lgbTimer');
+      if(!t) return;
+      this.render();
+      document.getElementById('lgbStart').onclick = ()=> this.start();
+      document.getElementById('lgbPause').onclick = ()=> this.pause();
+      document.getElementById('lgbReset').onclick = ()=> this.reset();
+    },
+    start(){
+      if(this.running) return;
+      this.running = true;
+      this.timerId = setInterval(()=>{
+        if(this.secs <= 0){ this.pause(); return; }
+        this.secs--; this.render();
+      }, 1000);
+    },
+    pause(){ this.running = false; if(this.timerId) clearInterval(this.timerId); this.timerId=null; },
+    reset(){ this.pause(); this.secs = this.initial; this.render(); },
+    render(){
+      const m = Math.floor(this.secs/60);
+      const s = this.secs % 60;
+      const t = document.getElementById('lgbTimer');
+      if(!t) return;
+      t.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      if(this.secs <= 120 && this.secs > 0) t.style.color = 'var(--warn)';
+      else if(this.secs === 0) t.style.color = 'var(--accent)';
+      else t.style.color = '';
+    }
+  };
+</script>
+</body>
+</html>

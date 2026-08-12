@@ -1,0 +1,105 @@
+{
+  "$comment": "Mock Jira-style tickets. Used in the optional internal-tool stretch (Track C Part 3 — feedback → Jira pipeline).",
+  "tickets": [
+    {
+      "key": "INV-201",
+      "title": "PDF export times out on invoices with 50+ line items",
+      "status": "in_progress",
+      "priority": "high",
+      "assignee": "alex@invoiceflow.test",
+      "labels": ["bug", "performance", "pdf"],
+      "created": "2026-03-12",
+      "description": "Users report 30-60 second waits when generating PDFs for large invoices. Likely related to the pdfkit migration."
+    },
+    {
+      "key": "INV-198",
+      "title": "Add Google + Microsoft SSO",
+      "status": "scoped",
+      "priority": "high",
+      "assignee": null,
+      "labels": ["feature", "auth", "enterprise"],
+      "created": "2026-03-08",
+      "description": "Enterprise prospects keep asking. Estimate is unclear — depends on auth refactor."
+    },
+    {
+      "key": "INV-187",
+      "title": "Currency formatting inconsistent across invoice list and dashboard",
+      "status": "open",
+      "priority": "medium",
+      "assignee": null,
+      "labels": ["bug", "i18n"],
+      "created": "2026-02-28",
+      "description": "Dashboard always shows USD. Invoice list shows code prefix. PDF varies. Needs consolidation to lib/currency.ts."
+    },
+    {
+      "key": "INV-179",
+      "title": "Recurring invoices",
+      "status": "backlog",
+      "priority": "high",
+      "assignee": null,
+      "labels": ["feature", "billing"],
+      "created": "2026-02-15",
+      "description": "Highest-voted feature request. Should support monthly, quarterly, annual cadences."
+    },
+    {
+      "key": "INV-175",
+      "title": "CSV export for invoices",
+      "status": "backlog",
+      "priority": "medium",
+      "assignee": null,
+      "labels": ["feature", "export"],
+      "created": "2026-02-11",
+      "description": "Users want to export invoice data for accounting tools. Typical shape: invoice number, customer, date, total, status."
+    },
+    {
+      "key": "INV-168",
+      "title": "Mobile app freeze on invoice creation",
+      "status": "open",
+      "priority": "high",
+      "assignee": "noa@invoiceflow.test",
+      "labels": ["bug", "mobile"],
+      "created": "2026-02-04",
+      "description": "iPhone 13 Pro freezes when adding 5+ line items. Reproducible."
+    },
+    {
+      "key": "INV-152",
+      "title": "Customer search/filter on /customers page",
+      "status": "backlog",
+      "priority": "medium",
+      "assignee": null,
+      "labels": ["feature", "ux"],
+      "created": "2026-01-22",
+      "description": "Once a user has 50+ customers the page becomes hard to navigate. Add a search box."
+    },
+    {
+      "key": "INV-141",
+      "title": "Hebrew RTL support",
+      "status": "backlog",
+      "priority": "medium",
+      "assignee": null,
+      "labels": ["feature", "i18n", "rtl"],
+      "created": "2026-01-10",
+      "description": "Israeli users have asked. Includes both UI mirroring and number/date formatting."
+    },
+    {
+      "key": "INV-128",
+      "title": "Invoice templates (custom branding)",
+      "status": "backlog",
+      "priority": "low",
+      "assignee": null,
+      "labels": ["feature", "branding"],
+      "created": "2025-12-20",
+      "description": "Let users upload a logo and customize colors for the PDF output. Tied to BETA_PDF_EXPORT migration."
+    },
+    {
+      "key": "INV-115",
+      "title": "Stripe Connect integration",
+      "status": "backlog",
+      "priority": "high",
+      "assignee": null,
+      "labels": ["feature", "payments", "integration"],
+      "created": "2025-11-30",
+      "description": "Let customers pay invoices directly via a hosted Stripe checkout. Often requested by Pro users."
+    }
+  ]
+}
