@@ -4,7 +4,7 @@ A **chat-first** NBA trade assistant. You tell it which team you represent and w
 
 Built for the Gambit Labs HAPI onboarding task. The mouse is optional: conversation is the primary input, and the GUI is a mirror.
 
-> **Live demo:** _(not yet deployed — see [Deploying](#deploying))_
+> **Live demo:** **<https://nba-trade-assistant.vercel.app>**
 
 ---
 
@@ -130,13 +130,19 @@ Production and displayed trades are always validated by the real bball-GM API; t
 
 ## Deploying
 
-Vercel free tier, zero config:
+Deployed to the Vercel free tier via the CLI:
 
-1. Push the branch and import the repo at [vercel.com/new](https://vercel.com/new).
-2. Add `ANTHROPIC_API_KEY` as an environment variable (leave `MOCK_LLM`/`MOCK_BBALLGM` unset).
-3. Deploy, then walk the manual script in [`docs/qa-plan.md`](docs/qa-plan.md) against the public URL.
+```bash
+vercel link --yes
+vercel env add ANTHROPIC_API_KEY production   # value piped in, never echoed
+vercel --prod --yes
+```
 
-The league engine is called server-side, so there are no CORS concerns.
+Leave `MOCK_LLM` and `MOCK_BBALLGM` **unset** in Vercel — their absence is what selects the real Claude and real bball-GM clients at the composition edge.
+
+Only the clean alias `nba-trade-assistant.vercel.app` is public; the project-scoped `*-yonatans-projects-*.vercel.app` URLs sit behind Vercel's deployment protection. Redeploy with `vercel --prod --yes`.
+
+The league engine is called server-side, so there are no CORS concerns — and note that blocking `bball-gm.com` on your own machine will **not** simulate an outage against the deployment. Run that check locally (see [`docs/qa-plan.md`](docs/qa-plan.md) §4).
 
 ---
 

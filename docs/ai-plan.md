@@ -132,7 +132,7 @@ Each tier swaps exactly one boundary from fake to real, so a failure attributes 
 |---|---|---|---|---|
 | **1 — stable automated** | scripted (`MOCK_LLM=1`) | fixture (`MOCK_BBALLGM=1`) | Deterministic, CI-safe. Exercises the real pipeline: UI → `/api/chat` → harness → tools → state machine → candidate generation → validation abstraction → results → UI sync. | 100 Vitest + 9 Playwright passing |
 | **2 — integration** | scripted | **real** | Catches API schema drift and real validation problems. Network-dependent; not a CI gate. | 3 Playwright passing |
-| **3 — manual QA** | **real Claude** | **real** | Prompt quality, tool comprehension, conversation flow. See [`qa-plan.md`](./qa-plan.md). | Blocked on an API key |
+| **3 — manual QA** | **real Claude** | **real** | Prompt quality, tool comprehension, conversation flow. See [`qa-plan.md`](./qa-plan.md). | Conversational half verified against the live deployment; browser/visual half still manual |
 
 **Wording contract:** production/displayed trades are validated by the real bball-GM API. Deterministic automated tests use a fixture-backed implementation of the same client interface. Mocking in Tier 1 does not weaken the production implementation.
 

@@ -14,13 +14,15 @@ Build a chat-first NBA trade assistant where conversation drives trade state thr
   - Verified against the live engine: "Boston → Anthony Davis" returns **11 validated trades with 274 candidates still pending**; Show more continued to 19 validated without regenerating or reordering.
   - Docs written: `ai-plan.md`, `qa-plan.md`, this file, and a rewritten `README.md`.
   - Committed and pushed as three commits on `feature-mvp-trade-assistant`: `c8fa7e7` (feat — app, components, lib, config), `3c0e6f1` (test — Vitest units plus Tier-1/Tier-2 Playwright), `03ec30a` (docs — ai-plan, qa-plan, this file, README rewrite).
+  - **Deployed to Vercel and verified live:** <https://nba-trade-assistant.vercel.app> returns the same 11 valid / 274 pending for "Boston → Anthony Davis" as the local run, in ~7s per turn against the route's `maxDuration = 60`.
+  - **Tier 3 verified at the API level** against real Claude + the real engine: criteria resolution, confirmation gating, search, target change invalidating confirmation, ambiguity listing all matches with teams, free-agent rejection, unknown player, and out-of-scope refusal.
 - **In progress:** nothing — the build is at a natural stopping point.
 - **Blocked:**
-  - **Tier 3 manual QA** (real Claude + real engine) needs a funded `ANTHROPIC_API_KEY` in `.env.local`. The previous key was deleted when the earlier build was torn down. Everything else runs without one.
-  - **Deployment** to Vercel needs the user's account and their explicit go-ahead.
+  - **Tier 3 browser QA** — the visual half of `qa-plan.md` §4 (steps 1, 5, 6, 14–16: split view, card rendering, Show more, responsive tabs, focus rings, reduced motion) still needs a human at a browser. The conversational half is verified.
+  - **The validation-outage check** must be run locally against `npm run dev`, not the deployment — the engine is called server-side, so blocking `bball-gm.com` on a client machine does not affect Vercel.
   - **The PR** is not open. It is the next HAPI stage after this handoff, but it waits on the user asking for it in the moment.
 
-**Committed and pushed.** The working tree is clean and `origin/feature-mvp-trade-assistant` is at `03ec30a`, so nothing is unpushed. **No PR is open** — `main` is still at `cd4ae13` (Initial commit). The branch has **no upstream configured**, so a bare `git push` fails; use `git push -u origin feature-mvp-trade-assistant` once to set it.
+**Committed and pushed.** Upstream tracking is configured, so a bare `git push` works. **No PR is open** — `main` is still at `cd4ae13` (Initial commit).
 
 ## Key decisions (this session)
 
@@ -30,6 +32,8 @@ Build a chat-first NBA trade assistant where conversation drives trade state thr
 - **Team colours come from the API.** Verified before building that `GET /api/teams` returns `primaryColor`/`secondaryColor`, so no hand-curated 30-team map was written.
 - **Salary signs are normalised at the boundary.** Product semantics are `salarySavings = outgoing − target`; the API's `netSalaryChange` is the opposite sign and never shares a name with it.
 - **Broadcast/arena design direction**, implemented as progressive enhancement — no state transition depends on animation code.
+- **Tier 2 was silently testing the fixture, and now cannot be.** Next.js loads `.env.local` into `process.env` at server start, so a local file in demo mode fed `MOCK_BBALLGM=1` straight into the Tier-2 server: the tier passed while proving nothing about the real API. Fixed by pinning `MOCK_BBALLGM: "0"` in the Tier-2 config — timings confirm it (`511ms → 4.8s` on the same assertions). The assertions were always correct; only the boundary was wrong.
+- **Deployed with the Vercel CLI, not the Git integration.** `vercel link` could not connect the GitHub repo, and CLI deploys sidestep that entirely. The key is stored as a Sensitive production env var, piped from `.env.local` so it never appeared in a command line.
 
 ## Human guidance given
 
@@ -47,11 +51,11 @@ Plus, this session: the model switch to Opus 5; the explicit `TradeState` shape 
 
 - Should Tier 2 run in CI at all, or stay a pre-delivery manual gate? It is network-dependent by design.
 - The fixture engine implements one documented salary-matching rule, not the full CBA. Enough for determinism — worth revisiting only if Tier 1 starts needing richer verdict shapes.
-- Whether to add a small server-side rate guard before making the demo public.
+- **The demo is now public and unguarded** — every visitor spends real Anthropic credits against the deployed key. A server-side rate guard, or at minimum a spend cap in the Anthropic console, is the obvious next hardening step.
 
 ## Continue from here
 
-- **Branch:** `feature-mvp-trade-assistant` — 3 commits, pushed, no PR yet.
+- **Branch:** `feature-mvp-trade-assistant` — pushed, upstream tracking set, no PR yet.
 - **Files:** `lib/harness.ts` (the loop), `lib/tools.ts` (the tool boundary), `lib/validation.ts` (search semantics and the monotonicity invariant), `lib/state.ts` (types and reducer), `components/Board.tsx` + `components/TradeCard.tsx` (the mirror).
 - **Commands:**
   ```bash
@@ -60,10 +64,11 @@ Plus, this session: the model switch to Opus 5; the explicit `TradeState` shape 
   npm run build
   npm run test:e2e         # Tier 1, deterministic
   npm run test:e2e:tier2   # Tier 2, real engine
-  npm run dev              # needs ANTHROPIC_API_KEY for real chat
+  npm run dev              # needs ANTHROPIC_API_KEY, both MOCK_* lines commented out
+  vercel --prod --yes      # redeploy
   ```
-- **Next steps:** add an API key → walk the Tier-3 script in [`qa-plan.md`](./qa-plan.md) → deploy to Vercel → ask the user before opening the PR.
-- **Demo URL:** none yet.
+- **Next steps:** walk the browser half of the Tier-3 script in [`qa-plan.md`](./qa-plan.md) §4 (steps 1, 5, 6, 14–16) → run the validation-outage check locally → ask the user before opening the PR.
+- **Demo URL:** <https://nba-trade-assistant.vercel.app> (Vercel project `yonatans-projects-7d5ba689/nba-trade-assistant`). Redeploy with `vercel --prod --yes`. Only the clean alias is public — the project-scoped `*-yonatans-projects-*.vercel.app` URLs sit behind Vercel SSO.
 
 ## Do not regress
 
@@ -74,6 +79,7 @@ Plus, this session: the model switch to Opus 5; the explicit `TradeState` shape 
 - Keep `candidates.ts` pure and network-free; keep batching, concurrency, and the time budget in `validation.ts`.
 - The search returns partial results when the time budget is reached; it must not time out or fail wholesale.
 - Keep both dependency boundaries and the composition edge — env flags must not leak into business logic.
+- **Every Playwright config must set `MOCK_LLM` *and* `MOCK_BBALLGM` explicitly**, even where a value looks like the default. `MOCK_BBALLGM: "0"` in the Tier-2 config is not redundant: Next.js loads `.env.local` into `process.env` at server start, so a local file in demo mode silently swaps the real engine for the fixture and the tier passes while proving nothing. Nothing catches this — the suite stays green, `.env.local` is gitignored so the trigger never appears in a diff, and demo mode is the default onboarding state. Do not "tidy up" that line.
 - Salary sign semantics follow the Human Plan; do not let the API's `netSalaryChange` and the product's `salarySavings` share a name.
 - The demo scripts use rostered stars. **LeBron James is a free agent in this dataset and cannot be traded** — that is correct behaviour, not a bug.
 - Visual polish stays optional: the app must work with animation removed or `prefers-reduced-motion` set.

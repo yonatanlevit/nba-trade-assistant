@@ -70,7 +70,9 @@ Scripted LLM against the **real** engine. Asserts real league data resolves, the
 
 ## 4. Tier 3 — manual checks against a live deployment
 
-Requires `ANTHROPIC_API_KEY` in `.env.local` (or the Vercel dashboard). Run each numbered step in a fresh session.
+Live deployment: **<https://nba-trade-assistant.vercel.app>**. Running locally instead requires `ANTHROPIC_API_KEY` in `.env.local` with both `MOCK_*` lines commented out. Run each numbered step in a fresh session.
+
+Steps 2–4, 7, and 9–13 have been verified against the live deployment at the API level (real Claude, real engine). What still needs a human at a browser is the visual half — steps 1, 5, 6, 14, 15, and 16.
 
 > ⚠️ **Synthetic-data gotcha:** in bball-GM's dataset **LeBron James is a free agent with a $0 salary and cannot be traded.** Demos must use rostered stars — Jayson Tatum (Celtics) or Anthony Davis (Wizards).
 
