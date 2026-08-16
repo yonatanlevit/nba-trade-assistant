@@ -13,12 +13,14 @@ Build a chat-first NBA trade assistant where conversation drives trade state thr
   - **100 Vitest unit tests**, **9 Tier-1 Playwright e2e** (both boundaries mocked, deterministic), **3 Tier-2 e2e** (scripted LLM + real bball-GM engine) — all green.
   - Verified against the live engine: "Boston → Anthony Davis" returns **11 validated trades with 274 candidates still pending**; Show more continued to 19 validated without regenerating or reordering.
   - Docs written: `ai-plan.md`, `qa-plan.md`, this file, and a rewritten `README.md`.
+  - Committed and pushed as three commits on `feature-mvp-trade-assistant`: `c8fa7e7` (feat — app, components, lib, config), `3c0e6f1` (test — Vitest units plus Tier-1/Tier-2 Playwright), `03ec30a` (docs — ai-plan, qa-plan, this file, README rewrite).
 - **In progress:** nothing — the build is at a natural stopping point.
 - **Blocked:**
   - **Tier 3 manual QA** (real Claude + real engine) needs a funded `ANTHROPIC_API_KEY` in `.env.local`. The previous key was deleted when the earlier build was torn down. Everything else runs without one.
   - **Deployment** to Vercel needs the user's account and their explicit go-ahead.
+  - **The PR** is not open. It is the next HAPI stage after this handoff, but it waits on the user asking for it in the moment.
 
-**Nothing is committed.** The entire build sits in the working tree by the user's explicit instruction ("do not commit and do not PR"). `git status` shows the new `app/`, `components/`, `lib/`, `tests/`, `e2e/`, `docs/`, and config files as untracked, plus a modified `README.md`.
+**Committed and pushed.** The working tree is clean and `origin/feature-mvp-trade-assistant` is at `03ec30a`, so nothing is unpushed. **No PR is open** — `main` is still at `cd4ae13` (Initial commit). The branch has **no upstream configured**, so a bare `git push` fails; use `git push -u origin feature-mvp-trade-assistant` once to set it.
 
 ## Key decisions (this session)
 
@@ -49,7 +51,7 @@ Plus, this session: the model switch to Opus 5; the explicit `TradeState` shape 
 
 ## Continue from here
 
-- **Branch:** `feature-mvp-trade-assistant` (nothing committed).
+- **Branch:** `feature-mvp-trade-assistant` — 3 commits, pushed, no PR yet.
 - **Files:** `lib/harness.ts` (the loop), `lib/tools.ts` (the tool boundary), `lib/validation.ts` (search semantics and the monotonicity invariant), `lib/state.ts` (types and reducer), `components/Board.tsx` + `components/TradeCard.tsx` (the mirror).
 - **Commands:**
   ```bash
@@ -60,7 +62,7 @@ Plus, this session: the model switch to Opus 5; the explicit `TradeState` shape 
   npm run test:e2e:tier2   # Tier 2, real engine
   npm run dev              # needs ANTHROPIC_API_KEY for real chat
   ```
-- **Next steps:** add an API key → walk the Tier-3 script in [`qa-plan.md`](./qa-plan.md) → deploy to Vercel → ask the user before committing, pushing, or opening the PR.
+- **Next steps:** add an API key → walk the Tier-3 script in [`qa-plan.md`](./qa-plan.md) → deploy to Vercel → ask the user before opening the PR.
 - **Demo URL:** none yet.
 
 ## Do not regress
