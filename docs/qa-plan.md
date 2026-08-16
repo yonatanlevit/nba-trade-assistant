@@ -72,7 +72,7 @@ Scripted LLM against the **real** engine. Asserts real league data resolves, the
 
 Live deployment: **<https://nba-trade-assistant.vercel.app>**. Running locally instead requires `ANTHROPIC_API_KEY` in `.env.local` with both `MOCK_*` lines commented out. Run each numbered step in a fresh session.
 
-Steps 2–4, 7, and 9–13 have been verified against the live deployment at the API level (real Claude, real engine). What still needs a human at a browser is the visual half — steps 1, 5, 6, 14, 15, and 16.
+**All 16 steps have been walked and pass.** Steps 2–4, 7, and 9–13 were additionally verified at the API level against the live deployment (real Claude, real engine); the visual steps — 1, 5, 6, 14, 15, 16 — were confirmed by a human at a browser.
 
 > ⚠️ **Synthetic-data gotcha:** in bball-GM's dataset **LeBron James is a free agent with a $0 salary and cannot be traded.** Demos must use rostered stars — Jayson Tatum (Celtics) or Anthony Davis (Wizards).
 
@@ -95,15 +95,28 @@ Steps 2–4, 7, and 9–13 have been verified against the live deployment at the
 | 15 | Tab through the page | Visible amber focus rings on the input, send button, Show more, and tab switches. |
 | 16 | Enable OS "reduce motion", reload, repeat step 4 | Cards appear without animation; all functionality is unchanged. |
 
-### Validation-outage check (manual)
+### Validation-outage check (manual) — ✅ run and passing
 
-With the app running, block `bball-gm.com` (hosts file, devtools offline, or firewall) and:
+Verifies the monotonicity invariant end to end: **the result set never shrinks because of an infrastructure error.**
 
-| Scenario | Expected |
-|---|---|
-| Confirm a search while blocked | No cards. Error card reads exactly *"Trade validation is temporarily unavailable. Please try again later."* with a Retry button. |
-| Run a successful search, then block and press **Show more** | **Every previously validated card stays on screen.** The error appears alongside them; nothing is removed. |
-| Unblock and press **Retry** | Validation resumes down the same candidate list; the error clears. |
+Run it **locally**, never against the deployment — the engine is called server-side from `lib/bballGmClient.ts`, so blocking `bball-gm.com` on your own machine has no effect on Vercel's servers. For the same reason, **devtools "offline" does not work**: it only cuts the browser's network, while the failing request is a `fetch` inside Node.
+
+Blocking the whole domain (hosts file, firewall) is also a poor fit — it kills `/teams` and `/players` too, so name resolution breaks before validation is ever reached, and you would be testing the wrong error path. Use the bundled proxy instead, which fails **only** `/trades/validate`:
+
+```bash
+node scripts/outage-proxy.mjs                       # terminal 1
+BBALLGM_BASE_URL=http://127.0.0.1:4599 npm run dev  # terminal 2
+```
+
+Open <http://127.0.0.1:4599/__outage> for a status page with a toggle button. It returns **503** rather than a 4xx on purpose: `bballGmClient.ts` treats 4xx as a definitive *"invalid trade"* verdict and only 5xx as an infrastructure failure, so a 404-style block would silently exercise the wrong branch.
+
+| Scenario | Expected | Result |
+|---|---|---|
+| Block validation, then confirm a search | No cards. Error reads exactly *"Trade validation is temporarily unavailable. Please try again later."* with a Retry button. Name resolution still works. | ✅ |
+| Run a successful search, then block and press **Show more** | **Every previously validated card stays on screen.** The error appears alongside them; nothing is removed or reordered. | ✅ |
+| Restore validation and press **Retry** | Validation resumes down the same candidate list; the error clears; further cards append. | ✅ |
+
+Afterwards, clear `BBALLGM_BASE_URL` (or close the terminal) — otherwise later runs keep pointing at a proxy that is no longer listening.
 
 ---
 

@@ -17,10 +17,10 @@ Build a chat-first NBA trade assistant where conversation drives trade state thr
   - **Deployed to Vercel and verified live:** <https://nba-trade-assistant.vercel.app> returns the same 11 valid / 274 pending for "Boston → Anthony Davis" as the local run, in ~7s per turn against the route's `maxDuration = 60`.
   - **Tier 3 verified at the API level** against real Claude + the real engine: criteria resolution, confirmation gating, search, target change invalidating confirmation, ambiguity listing all matches with teams, free-agent rejection, unknown player, and out-of-scope refusal.
 - **In progress:** nothing — the build is at a natural stopping point.
+  - **Tier 3 browser QA walked and passing** — the visual half of `qa-plan.md` §4 (split view, card rendering, Show more, responsive tabs, focus rings, reduced motion) confirmed by the user at a browser.
+  - **Validation-outage check run and passing**, all three scenarios, using `scripts/outage-proxy.mjs`. Cards survived a mid-flight failure; Retry resumed down the same list.
 - **Blocked:**
-  - **Tier 3 browser QA** — the visual half of `qa-plan.md` §4 (steps 1, 5, 6, 14–16: split view, card rendering, Show more, responsive tabs, focus rings, reduced motion) still needs a human at a browser. The conversational half is verified.
-  - **The validation-outage check** must be run locally against `npm run dev`, not the deployment — the engine is called server-side, so blocking `bball-gm.com` on a client machine does not affect Vercel.
-  - **The PR** is not open. It is the next HAPI stage after this handoff, but it waits on the user asking for it in the moment.
+  - **The PR** is not open. It is the next HAPI stage after this handoff, but it waits on the user asking for it in the moment. It is the only outstanding delivery item.
 
 **Committed and pushed.** Upstream tracking is configured, so a bare `git push` works. **No PR is open** — `main` is still at `cd4ae13` (Initial commit).
 
@@ -67,7 +67,7 @@ Plus, this session: the model switch to Opus 5; the explicit `TradeState` shape 
   npm run dev              # needs ANTHROPIC_API_KEY, both MOCK_* lines commented out
   vercel --prod --yes      # redeploy
   ```
-- **Next steps:** walk the browser half of the Tier-3 script in [`qa-plan.md`](./qa-plan.md) §4 (steps 1, 5, 6, 14–16) → run the validation-outage check locally → ask the user before opening the PR.
+- **Next steps:** the only remaining delivery item is the PR — `feature-mvp-trade-assistant` → `main` in this repo, description per the brief's template (`gambit-onboarding-task.md:362-385`). Ask the user before opening it.
 - **Demo URL:** <https://nba-trade-assistant.vercel.app> (Vercel project `yonatans-projects-7d5ba689/nba-trade-assistant`). Redeploy with `vercel --prod --yes`. Only the clean alias is public — the project-scoped `*-yonatans-projects-*.vercel.app` URLs sit behind Vercel SSO.
 
 ## Do not regress
