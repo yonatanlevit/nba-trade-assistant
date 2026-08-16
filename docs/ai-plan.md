@@ -17,7 +17,7 @@ A chat-first NBA trade assistant. Conversation drives trade-builder state throug
 | Decision | Alternatives considered | Reason |
 |---|---|---|
 | **Next.js 15 (App Router) + TypeScript** | Vite + Express; Remix/SvelteKit; browser-only SPA | One deployable unit. API routes keep `ANTHROPIC_API_KEY` server-side (a browser-only SPA would leak it). Vercel free tier deploys it zero-config. Shared types between client and server carry the type-level rendering guarantee (§4). |
-| **`claude-opus-5` behind a `ModelClient` interface** | `claude-haiku-4-5` (cheapest/fastest, the first build's choice); `claude-sonnet-5`; OpenAI | Chosen for maximum tool-use reliability on messy phrasing; cost is trivial at demo volume. `MODEL_ID` is env-configurable and the SDK is confined to one file, so the swap is a one-file change. |
+| **`claude-opus-5` behind a `ModelClient` interface** | `claude-haiku-4-5` (cheapest/fastest, the first build's choice); `claude-sonnet-5`; OpenAI | Chosen for maximum tool-use reliability on messy phrasing; cost is trivial at demo volume. `MODEL_ID` is env-configurable and the SDK is confined to one file — but the request depends on three Opus-5 features, so the swap is a one-*file* change, not a one-*line* one (§2a). |
 | **Hand-rolled agentic loop** | Anthropic SDK `toolRunner`; LangChain; Vercel AI SDK | The harness/tool boundary is the graded artifact. A ~60-line explicit loop makes it visible and defensible; a framework would hide exactly what is being evaluated. |
 | **Two dependency boundaries: `ModelClient` + `BballGmClient`** | Env flags checked inside business logic | Core code depends on interfaces only; implementations are selected at the composition edge ([`lib/wiring.ts`](../lib/wiring.ts)). This is what makes the three test tiers possible. |
 | **Stateless server, client-held `TradeState`** | Server session store (Redis); database | Vercel serverless has no sticky sessions. One state object is the single source of truth for chat and board, so their sync is structural rather than something to keep in step. |
@@ -26,6 +26,18 @@ A chat-first NBA trade assistant. Conversation drives trade-builder state throug
 | **Team colours from the API** | Hand-curated 30-team map | Verified before building: `GET /api/teams` returns `primaryColor`/`secondaryColor` per team. No hand-maintained map needed. |
 | **Vitest + Playwright, three tiers** | Jest; single-tier e2e against live services | Vitest is faster with ESM/TS. Tiering isolates each external boundary so a failure attributes to one layer (§6). |
 | **Vercel free tier** | Render; Railway | First-party Next.js host, public URL, env-var management. Serverless duration is handled by a configurable time budget (§5), not by assuming a platform number. |
+
+### 2a. What the model choice is actually coupled to
+
+The `ModelClient` boundary keeps the SDK in one file, but the request built in [`lib/modelClient.ts`](../lib/modelClient.ts) uses three Opus-5 capabilities. Two are conveniences; the first is structural.
+
+| Feature | Why it's there | Portability |
+|---|---|---|
+| Mid-conversation `role: "system"` message | Carries the fresh `<current_state>` snapshot per call (§3) — operator-authority and cache-preserving, so the snapshot never invalidates the cached prefix | **Opus 5 / Opus 4.8 / Fable 5 only** — notably **not Sonnet 5**. Elsewhere: `400 role 'system' is not supported on this model` on every request |
+| `output_config: { effort: "low" }` | Keeps chat turns snappy with thinking left on | Fine on all three above; errors on Haiku 4.5 |
+| Server-side refusal fallbacks (`"default"` form) | Recommended default for Opus 5 | Verify before assuming on 4.8/Fable 5; inert or rejected elsewhere |
+
+**So `MODEL_ID` has an allowlist of three, not a free choice.** The first row is the binding constraint: fresh state injection and the model choice are coupled. Any other model — Sonnet 5 and Haiku 4.5 included — requires re-expressing the snapshot as a user-turn message first. That works, but forfeits the operator-authority and prompt-injection properties that motivated §3's design, which is the real reason the cheaper model was not chosen. Tool-use reliability was the secondary argument.
 
 ---
 

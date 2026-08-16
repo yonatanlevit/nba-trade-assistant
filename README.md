@@ -107,11 +107,19 @@ Configuration (all optional except the key):
 | Variable | Default | Purpose |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | — | **Required.** Server-side only; never reaches the browser. |
-| `MODEL_ID` | `claude-opus-5` | The model powering the loop. Swappable — the SDK lives in one file. |
+| `MODEL_ID` | `claude-opus-5` | The model powering the loop. Not freely swappable — see the note below. |
 | `SEARCH_TIME_BUDGET_MS` | `8000` | Wall-clock budget per validation pass. |
 | `VALIDATION_CONCURRENCY` | `4` | Parallel engine requests per window. |
 | `BBALLGM_BASE_URL` | `https://bball-gm.com/api` | League data + validation endpoint. |
 | `MOCK_LLM` / `MOCK_BBALLGM` | unset | Test wiring only — swaps in deterministic fakes at the composition edge. |
+
+**On changing `MODEL_ID`.** All Anthropic SDK usage is confined to [`lib/modelClient.ts`](lib/modelClient.ts), so a model change touches one file — but the request there uses three Opus-5 features, and one of them is load-bearing:
+
+- **A mid-conversation `role: "system"` message** carries the fresh state snapshot. This is the state-injection mechanism, and it is supported on Opus 5, Opus 4.8, and Fable 5 only. A model without it returns `400: role 'system' is not supported on this model` on **every** request.
+- **`output_config: { effort: "low" }`** — the `effort` parameter errors on Haiku 4.5.
+- **Server-side refusal fallbacks** — an Opus 5 feature; inert elsewhere.
+
+The practical effect is a short allowlist. `MODEL_ID` accepts **`claude-opus-5`, `claude-opus-4-8`, or `claude-fable-5`** — the models that support a mid-conversation `role: "system"` message. **Every other model, including `claude-sonnet-5` and `claude-haiku-4-5`, fails on every request**, because the state snapshot has nowhere to go. Setting `MODEL_ID` to a cheaper model is a code change, not a config change: the snapshot has to move into a user turn first, which costs the operator-authority and cache-preservation properties it was designed for.
 
 ### Testing
 

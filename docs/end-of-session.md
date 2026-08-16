@@ -27,7 +27,7 @@ Build a chat-first NBA trade assistant where conversation drives trade state thr
 ## Key decisions (this session)
 
 - **Fresh rebuild from scratch.** The earlier tested implementation remains untouched in `git stash@{0}` as read-only reference; it was never popped. Inspect with `git stash show -p stash@{0}` if ever useful.
-- **Model: `claude-opus-5`** (changed from `claude-haiku-4-5` mid-session at the user's request), behind a `ModelClient` interface with `MODEL_ID` env-configurable. Adaptive thinking left on at `effort: "low"` — Opus 5 defaults thinking on, and disabling it risks tool calls being emitted as plain text. Server-side refusal fallbacks enabled.
+- **Model: `claude-opus-5`** (changed from `claude-haiku-4-5` mid-session at the user's request), behind a `ModelClient` interface with `MODEL_ID` env-configurable. Adaptive thinking left on at `effort: "low"` — Opus 5 defaults thinking on, and disabling it risks tool calls being emitted as plain text. Server-side refusal fallbacks enabled. **`MODEL_ID` is set nowhere** — not in `.env.local` (commented out) and not in Vercel — so both local and production run the `claude-opus-5` default in `lib/modelClient.ts`. Confirmed 2026-08-16 after a question about whether the app was on Haiku; it is not, and has not been since the switch.
 - **A second dependency boundary, `BballGmClient`**, mirroring `ModelClient`. Both implementations are chosen at the composition edge (`lib/wiring.ts`) via env flags, never inside business logic. This is what makes the three test tiers possible.
 - **Team colours come from the API.** Verified before building that `GET /api/teams` returns `primaryColor`/`secondaryColor`, so no hand-curated 30-team map was written.
 - **Salary signs are normalised at the boundary.** Product semantics are `salarySavings = outgoing − target`; the API's `netSalaryChange` is the opposite sign and never shares a name with it.
@@ -51,7 +51,7 @@ Plus, this session: the model switch to Opus 5; the explicit `TradeState` shape 
 
 - Should Tier 2 run in CI at all, or stay a pre-delivery manual gate? It is network-dependent by design.
 - The fixture engine implements one documented salary-matching rule, not the full CBA. Enough for determinism — worth revisiting only if Tier 1 starts needing richer verdict shapes.
-- **The demo is now public and unguarded** — every visitor spends real Anthropic credits against the deployed key. A server-side rate guard, or at minimum a spend cap in the Anthropic console, is the obvious next hardening step.
+- **The demo is public, and its spend cap is deliberately tight.** A **$2/month** cap is set in the Anthropic console (user's choice, 2026-08-16). At Opus 5 rates — $5/M input, $25/M output, with the system prompt and tool schemas cached — a chat turn costs roughly $0.02–0.04, so $2 is about **80 turns, or 4–8 reviewer sessions**. There is no graceful degradation: when the cap trips the API errors and the live demo goes dead. Raise it before sharing the URL widely, and add a server-side rate guard if the demo stays up.
 
 ## Continue from here
 
@@ -76,6 +76,7 @@ Plus, this session: the model switch to Opus 5; the explicit `TradeState` shape 
 - Results never shrink because of an infrastructure error. A failure with zero results shows the exact message *"Trade validation is temporarily unavailable. Please try again later."*; a failure after results exist keeps every card and shows the error alongside.
 - No total cap on results. Show more continues down the same saved ordered list — never regenerate, never reorder, never call the LLM.
 - Do not add a `get_current_state` tool. State is injected fresh before every model call and never persisted into history.
+- **`MODEL_ID` is not a free knob — treat a model change as a code change.** The request in `lib/modelClient.ts` uses three Opus-5 features, and one is structural: the fresh state snapshot rides as a mid-conversation `role: "system"` message, supported on Opus 5 / Opus 4.8 / Fable 5 only. **`MODEL_ID` accepts `claude-opus-5`, `claude-opus-4-8`, or `claude-fable-5` and nothing else** — those are the models supporting a mid-conversation `role: "system"` message. Point it anywhere else, **Sonnet 5 and Haiku 4.5 included**, and every request fails with `400 role 'system' is not supported on this model` (Haiku additionally errors on `output_config.effort`). Nothing in the test suite catches this: Tier 1 and Tier 2 both run the scripted client and never touch the real SDK, so a bad `MODEL_ID` ships green and breaks only in production.
 - Keep `candidates.ts` pure and network-free; keep batching, concurrency, and the time budget in `validation.ts`.
 - The search returns partial results when the time budget is reached; it must not time out or fail wholesale.
 - Keep both dependency boundaries and the composition edge — env flags must not leak into business logic.
