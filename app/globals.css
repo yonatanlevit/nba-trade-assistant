@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+/* ── Broadcast / Arena design tokens ─────────────────────────────────── */
+:root {
+  --court: #0b0e13;
+  --panel: #12161e;
+  --elevated: #1a1f2a;
+  --line: #2a3140;
+  --ink: #edeff4;
+  --ink-dim: #8b93a5;
+  --amber: #ffb100;
+  --valid: #3ddc84;
+  --alert: #ff5d5d;
+
+  --font-display: var(--font-barlow), "Arial Narrow", sans-serif;
+  --font-ui: var(--font-archivo), system-ui, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--court);
+  background-image:
+    radial-gradient(1200px 600px at 70% -10%, rgba(255, 177, 0, 0.055), transparent 60%),
+    radial-gradient(900px 500px at 10% 110%, rgba(61, 90, 160, 0.08), transparent 55%);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scoreboard display type */
+.display {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Panels & chips ──────────────────────────────────────────────────── */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.15rem 0.65rem;
+  font-size: 0.72rem;
+  border: 1px solid var(--line);
+  background: var(--elevated);
+  color: var(--ink-dim);
+}
+
+.chip-ok {
+  color: var(--valid);
+  border-color: color-mix(in srgb, var(--valid) 35%, var(--line));
+}
+
+.chip-warn {
+  color: var(--amber);
+  border-color: color-mix(in srgb, var(--amber) 35%, var(--line));
+}
+
+/* ── Trade card ──────────────────────────────────────────────────────── */
+.trade-card {
+  position: relative;
+  background: var(--elevated);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.trade-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--team-a, var(--amber)) 0%, var(--team-a, var(--amber)) 45%, var(--team-b, var(--amber)) 55%, var(--team-b, var(--amber)) 100%);
+}
+
+.side-a {
+  border-left: 3px solid var(--team-a, var(--line));
+}
+
+.side-b {
+  border-left: 3px solid var(--team-b, var(--line));
+}
+
+/* ── Badges ──────────────────────────────────────────────────────────── */
+.badge {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+}
+
+.badge-saved {
+  color: var(--valid);
+  background: color-mix(in srgb, var(--valid) 12%, transparent);
+}
+
+.badge-added {
+  color: var(--alert);
+  background: color-mix(in srgb, var(--alert) 12%, transparent);
+}
+
+.badge-even {
+  color: var(--ink-dim);
+  background: color-mix(in srgb, var(--ink-dim) 12%, transparent);
+}
+
+/* ── Confirmation pulse ──────────────────────────────────────────────── */
+@keyframes amber-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 177, 0, 0.0); }
+  50% { box-shadow: 0 0 0 5px rgba(255, 177, 0, 0.16); }
+}
+
+.pulse-amber {
+  animation: amber-pulse 1.6s ease-in-out infinite;
+}
+
+/* ── Skeleton shimmer ────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: linear-gradient(90deg, var(--elevated) 25%, #222836 50%, var(--elevated) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+/* ── Focus & motion accessibility ────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-amber,
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* Subtle scrollbars on the dark ground */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
