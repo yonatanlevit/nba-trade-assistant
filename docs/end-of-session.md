@@ -51,7 +51,7 @@ Plus, this session: the model switch to Opus 5; the explicit `TradeState` shape 
 
 - Should Tier 2 run in CI at all, or stay a pre-delivery manual gate? It is network-dependent by design.
 - The fixture engine implements one documented salary-matching rule, not the full CBA. Enough for determinism — worth revisiting only if Tier 1 starts needing richer verdict shapes.
-- **The demo is public, and its spend cap is deliberately tight.** A **$2/month** cap is set in the Anthropic console (user's choice, 2026-08-16). At Opus 5 rates — $5/M input, $25/M output, with the system prompt and tool schemas cached — a chat turn costs roughly $0.02–0.04, so $2 is about **80 turns, or 4–8 reviewer sessions**. There is no graceful degradation: when the cap trips the API errors and the live demo goes dead. Raise it before sharing the URL widely, and add a server-side rate guard if the demo stays up.
+- **The demo is public, and its spend is capped.** A **$10/month** cap is set in the Anthropic console (user's choice, raised from $2 on 2026-08-17 ahead of review). At Opus 5 rates — $5/M input, $25/M output, with the system prompt and tool schemas cached — a chat turn costs roughly $0.02–0.04, so $10 is about **400 turns, or 20–40 reviewer sessions**. There is still no graceful degradation: when the cap trips the API errors and the live demo goes dead. Watch it while the PR is under review, and add a server-side rate guard if the demo stays up beyond that.
 
 ## Continue from here
 
