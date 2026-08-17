@@ -68,7 +68,7 @@ The model never resolves a name and never decides whether a trade is legal. That
 
 **Interaction model.** A chat turn produces tool calls; each executes against a copy of `TradeState`; the updated state comes back with the reply. Changing your team or target automatically invalidates a previous confirmation and clears results — enforced in the reducer, not in the prompt.
 
-**Sync.** Chat and board are not kept in step; they render from the *same* `TradeState` object. Drift is structurally impossible.
+**Sync.** Chat and board are not kept in step; they render from the *same* `TradeState` object, and the mechanism is checkable in [`app/page.tsx`](app/page.tsx). A single `useState<TradeState>` at the shell is the only client-side copy; both endpoints (`/api/chat` and `/api/validate-batch`) return a complete state object which the client **replaces wholesale** — never patched field-by-field; chat and board receive that object as props and hold no derived state of their own. There is no merge step and no second source of truth where the two views could diverge, which is why drift is structurally impossible rather than merely unlikely.
 
 ### Only validated trades can be displayed
 
